@@ -1,0 +1,640 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ClaimShield - Insurance Dashboard</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        :root {
+            --primary: #1e40af;
+            --primary-light: #3b82f6;
+            --secondary: #64748b;
+            --success: #10b981;
+            --warning: #f59e0b;
+            --danger: #ef4444;
+            --dark: #1e293b;
+            --light: #f8fafc;
+            --border: #e2e8f0;
+            --card-bg: #ffffff;
+            --text-primary: #0f172a;
+            --text-secondary: #64748b;
+        }
+
+        body {
+            background: linear-gradient(135deg, #f8fafc 0%, #e2e8f0 100%);
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+            margin: 0;
+            padding: 0;
+            min-height: 100vh;
+        }
+
+        .sidebar {
+            width: 260px;
+            height: 100vh;
+            background: var(--card-bg);
+            border-right: 1px solid var(--border);
+            position: fixed;
+            left: 0;
+            top: 0;
+            overflow-y: auto;
+            box-shadow: 2px 0 10px rgba(0,0,0,0.05);
+        }
+
+        .sidebar-header {
+            padding: 20px;
+            border-bottom: 1px solid var(--border);
+        }
+
+        .logo {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .logo-icon {
+            width: 32px;
+            height: 32px;
+            background: linear-gradient(135deg, var(--primary-light), var(--primary));
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+        }
+
+        .logo-text h2 {
+            font-size: 18px;
+            font-weight: 700;
+            margin: 0;
+            color: var(--text-primary);
+        }
+
+        .logo-text p {
+            font-size: 12px;
+            color: var(--text-secondary);
+            margin: 0;
+        }
+
+        .sidebar-nav {
+            padding: 20px 0;
+        }
+
+        .nav-item {
+            margin: 4px 16px;
+        }
+
+        .nav-link {
+            display: flex;
+            align-items: center;
+            padding: 12px 16px;
+            color: var(--text-secondary);
+            text-decoration: none;
+            border-radius: 8px;
+            transition: all 0.2s ease;
+            gap: 12px;
+        }
+
+        .nav-link:hover, .nav-link.active {
+            background: #f1f5f9;
+            color: var(--primary);
+            text-decoration: none;
+        }
+
+        .nav-link.active {
+            background: var(--primary);
+            color: white;
+            font-weight: 500;
+        }
+
+        .main-content {
+            margin-left: 260px;
+            padding: 24px;
+            min-height: 100vh;
+        }
+
+        .page-header {
+            margin-bottom: 32px;
+        }
+
+        .page-title {
+            font-size: 28px;
+            font-weight: 700;
+            color: var(--text-primary);
+            margin: 0;
+        }
+
+        .page-subtitle {
+            color: var(--text-secondary);
+            margin: 4px 0 0 0;
+        }
+
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 24px;
+            margin-bottom: 32px;
+        }
+
+        .stat-card {
+            background: var(--card-bg);
+            border-radius: 12px;
+            padding: 24px;
+            border: 1px solid var(--border);
+            box-shadow: 0 2px 8px rgba(0,0,0,0.04);
+            transition: transform 0.2s ease, box-shadow 0.2s ease;
+        }
+
+        .stat-card:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 25px rgba(0,0,0,0.1);
+        }
+
+        .stat-content {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .stat-text h3 {
+            font-size: 14px;
+            font-weight: 500;
+            color: var(--text-secondary);
+            margin: 0 0 8px 0;
+        }
+
+        .stat-value {
+            font-size: 28px;
+            font-weight: 700;
+            color: var(--text-primary);
+            margin: 0 0 8px 0;
+        }
+
+        .stat-change {
+            font-size: 14px;
+            font-weight: 500;
+            display: flex;
+            align-items: center;
+            gap: 4px;
+        }
+
+        .stat-change.positive { color: var(--success); }
+        .stat-change.negative { color: var(--danger); }
+
+        .stat-icon {
+            width: 48px;
+            height: 48px;
+            background: rgba(30, 64, 175, 0.1);
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: var(--primary);
+            font-size: 20px;
+        }
+
+        .chart-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(500px, 1fr));
+            gap: 24px;
+            margin-bottom: 32px;
+        }
+
+        .chart-card {
+            background: var(--card-bg);
+            border-radius: 12px;
+            border: 1px solid var(--border);
+            box-shadow: 0 2px 8px rgba(0,0,0,0.04);
+            overflow: hidden;
+        }
+
+        .chart-header {
+            padding: 20px;
+            border-bottom: 1px solid var(--border);
+        }
+
+        .chart-title {
+            font-size: 18px;
+            font-weight: 600;
+            color: var(--text-primary);
+            margin: 0;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .chart-body {
+            padding: 20px;
+            height: 350px;
+        }
+
+        .alerts-card {
+            background: var(--card-bg);
+            border-radius: 12px;
+            border: 1px solid var(--border);
+            box-shadow: 0 2px 8px rgba(0,0,0,0.04);
+            margin-bottom: 24px;
+        }
+
+        .alert-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 16px;
+            border-bottom: 1px solid var(--border);
+        }
+
+        .alert-item:last-child {
+            border-bottom: none;
+        }
+
+        .alert-indicator {
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+            margin-right: 16px;
+        }
+
+        .alert-indicator.high { background: var(--danger); }
+        .alert-indicator.medium { background: var(--warning); }
+        .alert-indicator.low { background: var(--success); }
+
+        .alert-info h4 {
+            font-size: 16px;
+            font-weight: 600;
+            margin: 0 0 4px 0;
+            color: var(--text-primary);
+        }
+
+        .alert-details {
+            font-size: 14px;
+            color: var(--text-secondary);
+            display: flex;
+            gap: 16px;
+        }
+
+        .alert-risk {
+            text-align: right;
+        }
+
+        .risk-score {
+            font-size: 18px;
+            font-weight: 700;
+            color: var(--text-primary);
+        }
+
+        .alert-time {
+            font-size: 12px;
+            color: var(--text-secondary);
+        }
+
+        .btn-primary {
+            background: var(--primary);
+            border-color: var(--primary);
+            padding: 8px 16px;
+            border-radius: 8px;
+            font-weight: 500;
+        }
+
+        .btn-outline-primary {
+            color: var(--primary);
+            border-color: var(--primary);
+            padding: 8px 16px;
+            border-radius: 8px;
+            font-weight: 500;
+        }
+
+        .badge {
+            padding: 4px 8px;
+            border-radius: 6px;
+            font-size: 12px;
+            font-weight: 500;
+        }
+
+        .badge-danger { background: rgba(239, 68, 68, 0.1); color: var(--danger); }
+        .badge-warning { background: rgba(245, 158, 11, 0.1); color: var(--warning); }
+        .badge-success { background: rgba(16, 185, 129, 0.1); color: var(--success); }
+
+        @media (max-width: 768px) {
+            .sidebar { width: 100%; height: auto; position: relative; }
+            .main-content { margin-left: 0; }
+            .stats-grid { grid-template-columns: 1fr; }
+            .chart-grid { grid-template-columns: 1fr; }
+        }
+    </style>
+</head>
+<body>
+    <!-- Sidebar -->
+    <nav class="sidebar">
+        <div class="sidebar-header">
+            <div class="logo">
+                <div class="logo-icon">
+                    <i class="fas fa-shield-alt"></i>
+                </div>
+                <div class="logo-text">
+                    <h2>ClaimShield</h2>
+                    <p>Insurance Platform</p>
+                </div>
+            </div>
+        </div>
+        <div class="sidebar-nav">
+            <div class="nav-item">
+                <a href="dashboard.html" class="nav-link active">
+                    <i class="fas fa-chart-bar"></i>
+                    Dashboard
+                </a>
+            </div>
+            <div class="nav-item">
+                <a href="claims.html" class="nav-link">
+                    <i class="fas fa-file-alt"></i>
+                    Claims Management
+                </a>
+            </div>
+            <div class="nav-item">
+                <a href="fraud.html" class="nav-link">
+                    <i class="fas fa-shield-alt"></i>
+                    Fraud Detection
+                </a>
+            </div>
+            <div class="nav-item">
+                <a href="map.html" class="nav-link">
+                    <i class="fas fa-map"></i>
+                    Regional Analysis
+                </a>
+            </div>
+            <div class="nav-item">
+                <a href="reports.html" class="nav-link">
+                    <i class="fas fa-chart-pie"></i>
+                    Reports & Analytics
+                </a>
+            </div>
+            <div class="nav-item">
+                <a href="users.html" class="nav-link">
+                    <i class="fas fa-users"></i>
+                    User Management
+                </a>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Main Content -->
+    <main class="main-content">
+        <!-- Header -->
+        <div class="page-header d-flex justify-content-between align-items-center">
+            <div>
+                <h1 class="page-title">Claims Dashboard</h1>
+                <p class="page-subtitle">Monitor and manage insurance claims processing</p>
+            </div>
+            <div class="d-flex gap-3">
+                <button class="btn btn-outline-primary">
+                    <i class="fas fa-chart-line me-2"></i>
+                    Generate Report
+                </button>
+                <button class="btn btn-primary">
+                    <i class="fas fa-shield-alt me-2"></i>
+                    Run Fraud Scan
+                </button>
+            </div>
+        </div>
+
+        <!-- Stats Cards -->
+        <div class="stats-grid">
+            <div class="stat-card">
+                <div class="stat-content">
+                    <div class="stat-text">
+                        <h3>Total Claims</h3>
+                        <div class="stat-value">2,847</div>
+                        <div class="stat-change positive">
+                            <i class="fas fa-arrow-up"></i>
+                            +12.5% vs last month
+                        </div>
+                    </div>
+                    <div class="stat-icon">
+                        <i class="fas fa-file-alt"></i>
+                    </div>
+                </div>
+            </div>
+
+            <div class="stat-card">
+                <div class="stat-content">
+                    <div class="stat-text">
+                        <h3>Approved Claims</h3>
+                        <div class="stat-value">2,156</div>
+                        <div class="stat-change positive">
+                            <i class="fas fa-arrow-up"></i>
+                            +8.2% vs last month
+                        </div>
+                    </div>
+                    <div class="stat-icon">
+                        <i class="fas fa-check-circle"></i>
+                    </div>
+                </div>
+            </div>
+
+            <div class="stat-card">
+                <div class="stat-content">
+                    <div class="stat-text">
+                        <h3>Pending Review</h3>
+                        <div class="stat-value">487</div>
+                        <div class="stat-change negative">
+                            <i class="fas fa-arrow-down"></i>
+                            -5.1% vs last month
+                        </div>
+                    </div>
+                    <div class="stat-icon">
+                        <i class="fas fa-clock"></i>
+                    </div>
+                </div>
+            </div>
+
+            <div class="stat-card">
+                <div class="stat-content">
+                    <div class="stat-text">
+                        <h3>Fraud Detected</h3>
+                        <div class="stat-value">204</div>
+                        <div class="stat-change negative">
+                            <i class="fas fa-arrow-up"></i>
+                            +23.4% vs last month
+                        </div>
+                    </div>
+                    <div class="stat-icon">
+                        <i class="fas fa-shield-alt"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Charts -->
+        <div class="chart-grid">
+            <div class="chart-card">
+                <div class="chart-header">
+                    <h3 class="chart-title">
+                        <i class="fas fa-chart-bar text-primary"></i>
+                        Monthly Claims Trends
+                    </h3>
+                </div>
+                <div class="chart-body">
+                    <canvas id="monthlyChart"></canvas>
+                </div>
+            </div>
+
+            <div class="chart-card">
+                <div class="chart-header">
+                    <h3 class="chart-title">
+                        <i class="fas fa-shield-alt text-primary"></i>
+                        Fraud Categories
+                    </h3>
+                </div>
+                <div class="chart-body">
+                    <canvas id="fraudChart"></canvas>
+                </div>
+            </div>
+        </div>
+
+        <!-- Recent Alerts -->
+        <div class="alerts-card">
+            <div class="chart-header">
+                <h3 class="chart-title d-flex justify-content-between">
+                    <span>
+                        <i class="fas fa-exclamation-triangle text-warning"></i>
+                        Recent Fraud Alerts
+                    </span>
+                    <button class="btn btn-outline-primary btn-sm">
+                        View All <i class="fas fa-arrow-right ms-2"></i>
+                    </button>
+                </h3>
+            </div>
+            <div>
+                <div class="alert-item">
+                    <div class="d-flex align-items-center">
+                        <div class="alert-indicator high"></div>
+                        <div class="alert-info">
+                            <h4>CLM-2024-0567 <span class="badge badge-danger">High Risk</span></h4>
+                            <div class="alert-details">
+                                <span><i class="fas fa-dollar-sign"></i> $45,230</span>
+                                <span><i class="fas fa-map-marker-alt"></i> Miami, FL</span>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="alert-risk">
+                        <div class="risk-score">89%</div>
+                        <div class="alert-time">2 min ago</div>
+                    </div>
+                </div>
+
+                <div class="alert-item">
+                    <div class="d-flex align-items-center">
+                        <div class="alert-indicator medium"></div>
+                        <div class="alert-info">
+                            <h4>CLM-2024-0568 <span class="badge badge-warning">Medium Risk</span></h4>
+                            <div class="alert-details">
+                                <span><i class="fas fa-dollar-sign"></i> $23,150</span>
+                                <span><i class="fas fa-map-marker-alt"></i> Phoenix, AZ</span>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="alert-risk">
+                        <div class="risk-score">67%</div>
+                        <div class="alert-time">12 min ago</div>
+                    </div>
+                </div>
+
+                <div class="alert-item">
+                    <div class="d-flex align-items-center">
+                        <div class="alert-indicator high"></div>
+                        <div class="alert-info">
+                            <h4>CLM-2024-0569 <span class="badge badge-danger">Anomaly Detected</span></h4>
+                            <div class="alert-details">
+                                <span><i class="fas fa-dollar-sign"></i> $78,900</span>
+                                <span><i class="fas fa-map-marker-alt"></i> Chicago, IL</span>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="alert-risk">
+                        <div class="risk-score">94%</div>
+                        <div class="alert-time">1 hour ago</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <script>
+        // Monthly Trends Chart
+        const monthlyCtx = document.getElementById('monthlyChart').getContext('2d');
+        const monthlyChart = new Chart(monthlyCtx, {
+            type: 'bar',
+            data: {
+                labels: ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun'],
+                datasets: [
+                    {
+                        label: 'Approved',
+                        data: [1200, 1350, 1100, 1580, 1750, 2156],
+                        backgroundColor: '#10b981',
+                        borderRadius: 4
+                    },
+                    {
+                        label: 'Fraud',
+                        data: [45, 52, 38, 67, 84, 204],
+                        backgroundColor: '#ef4444',
+                        borderRadius: 4
+                    },
+                    {
+                        label: 'Pending',
+                        data: [230, 280, 190, 340, 290, 487],
+                        backgroundColor: '#f59e0b',
+                        borderRadius: 4
+                    }
+                ]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: {
+                        position: 'bottom'
+                    }
+                },
+                scales: {
+                    y: {
+                        beginAtZero: true,
+                        grid: {
+                            color: '#e2e8f0'
+                        }
+                    },
+                    x: {
+                        grid: {
+                            display: false
+                        }
+                    }
+                }
+            }
+        });
+
+        // Fraud Categories Chart
+        const fraudCtx = document.getElementById('fraudChart').getContext('2d');
+        const fraudChart = new Chart(fraudCtx, {
+            type: 'doughnut',
+            data: {
+                labels: ['Staged Accidents', 'Inflated Claims', 'False Documentation', 'Identity Theft'],
+                datasets: [{
+                    data: [35, 28, 22, 15],
+                    backgroundColor: ['#ef4444', '#f97316', '#eab308', '#06b6d4'],
+                    borderWidth: 0
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: {
+                        position: 'bottom'
+                    }
+                }
+            }
+        });
+    </script>
+</body>
+</html>

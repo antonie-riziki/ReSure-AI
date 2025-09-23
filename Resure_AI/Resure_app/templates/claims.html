@@ -1,0 +1,585 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ClaimShield - Claims Management</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+    <style>
+        :root {
+            --primary: #1e40af;
+            --primary-light: #3b82f6;
+            --secondary: #64748b;
+            --success: #10b981;
+            --warning: #f59e0b;
+            --danger: #ef4444;
+            --dark: #1e293b;
+            --light: #f8fafc;
+            --border: #e2e8f0;
+            --card-bg: #ffffff;
+            --text-primary: #0f172a;
+            --text-secondary: #64748b;
+        }
+
+        body {
+            background: linear-gradient(135deg, #f8fafc 0%, #e2e8f0 100%);
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+            margin: 0;
+            padding: 0;
+            min-height: 100vh;
+        }
+
+        .sidebar {
+            width: 260px;
+            height: 100vh;
+            background: var(--card-bg);
+            border-right: 1px solid var(--border);
+            position: fixed;
+            left: 0;
+            top: 0;
+            overflow-y: auto;
+            box-shadow: 2px 0 10px rgba(0,0,0,0.05);
+        }
+
+        .sidebar-header {
+            padding: 20px;
+            border-bottom: 1px solid var(--border);
+        }
+
+        .logo {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .logo-icon {
+            width: 32px;
+            height: 32px;
+            background: linear-gradient(135deg, var(--primary-light), var(--primary));
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+        }
+
+        .logo-text h2 {
+            font-size: 18px;
+            font-weight: 700;
+            margin: 0;
+            color: var(--text-primary);
+        }
+
+        .logo-text p {
+            font-size: 12px;
+            color: var(--text-secondary);
+            margin: 0;
+        }
+
+        .sidebar-nav {
+            padding: 20px 0;
+        }
+
+        .nav-item {
+            margin: 4px 16px;
+        }
+
+        .nav-link {
+            display: flex;
+            align-items: center;
+            padding: 12px 16px;
+            color: var(--text-secondary);
+            text-decoration: none;
+            border-radius: 8px;
+            transition: all 0.2s ease;
+            gap: 12px;
+        }
+
+        .nav-link:hover, .nav-link.active {
+            background: #f1f5f9;
+            color: var(--primary);
+            text-decoration: none;
+        }
+
+        .nav-link.active {
+            background: var(--primary);
+            color: white;
+            font-weight: 500;
+        }
+
+        .main-content {
+            margin-left: 260px;
+            padding: 24px;
+            min-height: 100vh;
+        }
+
+        .page-header {
+            margin-bottom: 32px;
+        }
+
+        .page-title {
+            font-size: 28px;
+            font-weight: 700;
+            color: var(--text-primary);
+            margin: 0;
+        }
+
+        .page-subtitle {
+            color: var(--text-secondary);
+            margin: 4px 0 0 0;
+        }
+
+        .filter-card {
+            background: var(--card-bg);
+            border-radius: 12px;
+            border: 1px solid var(--border);
+            box-shadow: 0 2px 8px rgba(0,0,0,0.04);
+            padding: 24px;
+            margin-bottom: 24px;
+        }
+
+        .table-card {
+            background: var(--card-bg);
+            border-radius: 12px;
+            border: 1px solid var(--border);
+            box-shadow: 0 2px 8px rgba(0,0,0,0.04);
+            overflow: hidden;
+        }
+
+        .table-header {
+            padding: 20px 24px;
+            border-bottom: 1px solid var(--border);
+            background: var(--light);
+        }
+
+        .table-title {
+            font-size: 18px;
+            font-weight: 600;
+            color: var(--text-primary);
+            margin: 0;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .custom-table {
+            width: 100%;
+            margin: 0;
+        }
+
+        .custom-table thead th {
+            background: var(--light);
+            border: none;
+            color: var(--text-primary);
+            font-weight: 600;
+            padding: 16px 20px;
+            font-size: 14px;
+        }
+
+        .custom-table tbody td {
+            padding: 16px 20px;
+            border-top: 1px solid var(--border);
+            vertical-align: middle;
+        }
+
+        .custom-table tbody tr:hover {
+            background: rgba(30, 64, 175, 0.05);
+        }
+
+        .badge {
+            padding: 6px 12px;
+            border-radius: 6px;
+            font-size: 12px;
+            font-weight: 500;
+            display: inline-block;
+        }
+
+        .badge-success { background: rgba(16, 185, 129, 0.1); color: var(--success); }
+        .badge-warning { background: rgba(245, 158, 11, 0.1); color: var(--warning); }
+        .badge-danger { background: rgba(239, 68, 68, 0.1); color: var(--danger); }
+        .badge-secondary { background: rgba(100, 116, 139, 0.1); color: var(--secondary); }
+
+        .risk-high { background: rgba(239, 68, 68, 0.1); color: var(--danger); }
+        .risk-medium { background: rgba(245, 158, 11, 0.1); color: var(--warning); }
+        .risk-low { background: rgba(16, 185, 129, 0.1); color: var(--success); }
+
+        .btn-sm {
+            padding: 6px 12px;
+            font-size: 12px;
+            border-radius: 6px;
+        }
+
+        .btn-primary {
+            background: var(--primary);
+            border-color: var(--primary);
+        }
+
+        .btn-outline-primary {
+            color: var(--primary);
+            border-color: var(--primary);
+        }
+
+        .btn-outline-secondary {
+            color: var(--secondary);
+            border-color: var(--border);
+        }
+
+        .btn-action {
+            width: 32px;
+            height: 32px;
+            padding: 0;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 6px;
+            margin: 0 2px;
+        }
+
+        .form-control {
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            padding: 10px 12px;
+        }
+
+        .form-control:focus {
+            border-color: var(--primary);
+            box-shadow: 0 0 0 0.2rem rgba(30, 64, 175, 0.25);
+        }
+
+        .search-icon {
+            position: absolute;
+            left: 12px;
+            top: 50%;
+            transform: translateY(-50%);
+            color: var(--text-secondary);
+        }
+
+        .search-input {
+            padding-left: 40px;
+        }
+
+        @media (max-width: 768px) {
+            .sidebar { width: 100%; height: auto; position: relative; }
+            .main-content { margin-left: 0; }
+            .custom-table { font-size: 14px; }
+            .custom-table th, .custom-table td { padding: 12px 8px; }
+        }
+    </style>
+</head>
+<body>
+    <!-- Sidebar -->
+    <nav class="sidebar">
+        <div class="sidebar-header">
+            <div class="logo">
+                <div class="logo-icon">
+                    <i class="fas fa-shield-alt"></i>
+                </div>
+                <div class="logo-text">
+                    <h2>ClaimShield</h2>
+                    <p>Insurance Platform</p>
+                </div>
+            </div>
+        </div>
+        <div class="sidebar-nav">
+            <div class="nav-item">
+                <a href="dashboard.html" class="nav-link">
+                    <i class="fas fa-chart-bar"></i>
+                    Dashboard
+                </a>
+            </div>
+            <div class="nav-item">
+                <a href="claims.html" class="nav-link active">
+                    <i class="fas fa-file-alt"></i>
+                    Claims Management
+                </a>
+            </div>
+            <div class="nav-item">
+                <a href="fraud.html" class="nav-link">
+                    <i class="fas fa-shield-alt"></i>
+                    Fraud Detection
+                </a>
+            </div>
+            <div class="nav-item">
+                <a href="map.html" class="nav-link">
+                    <i class="fas fa-map"></i>
+                    Regional Analysis
+                </a>
+            </div>
+            <div class="nav-item">
+                <a href="reports.html" class="nav-link">
+                    <i class="fas fa-chart-pie"></i>
+                    Reports & Analytics
+                </a>
+            </div>
+            <div class="nav-item">
+                <a href="users.html" class="nav-link">
+                    <i class="fas fa-users"></i>
+                    User Management
+                </a>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Main Content -->
+    <main class="main-content">
+        <!-- Header -->
+        <div class="page-header d-flex justify-content-between align-items-center">
+            <div>
+                <h1 class="page-title">Claims Management</h1>
+                <p class="page-subtitle">Process and review insurance claims</p>
+            </div>
+            <div class="d-flex gap-3">
+                <button class="btn btn-outline-primary">
+                    <i class="fas fa-download me-2"></i>
+                    Export
+                </button>
+                <button class="btn btn-primary">
+                    <i class="fas fa-file-alt me-2"></i>
+                    New Claim
+                </button>
+            </div>
+        </div>
+
+        <!-- Filters -->
+        <div class="filter-card">
+            <div class="row g-3">
+                <div class="col-md-6">
+                    <div class="position-relative">
+                        <i class="fas fa-search search-icon"></i>
+                        <input type="text" class="form-control search-input" id="searchInput" 
+                               placeholder="Search by claim ID, policyholder, or policy number...">
+                    </div>
+                </div>
+                <div class="col-md-3">
+                    <select class="form-select" id="statusFilter">
+                        <option value="all">All Statuses</option>
+                        <option value="pending">Pending</option>
+                        <option value="approved">Approved</option>
+                        <option value="fraud">Fraud</option>
+                        <option value="rejected">Rejected</option>
+                    </select>
+                </div>
+                <div class="col-md-3">
+                    <select class="form-select" id="riskFilter">
+                        <option value="all">All Risk Levels</option>
+                        <option value="high">High Risk (80%+)</option>
+                        <option value="medium">Medium Risk (50-79%)</option>
+                        <option value="low">Low Risk (<50%)</option>
+                    </select>
+                </div>
+            </div>
+        </div>
+
+        <!-- Claims Table -->
+        <div class="table-card">
+            <div class="table-header">
+                <h3 class="table-title">
+                    <i class="fas fa-file-alt text-primary"></i>
+                    Claims List (<span id="claimCount">5</span>)
+                </h3>
+            </div>
+            <div class="table-responsive">
+                <table class="custom-table">
+                    <thead>
+                        <tr>
+                            <th>Claim ID</th>
+                            <th>Policyholder</th>
+                            <th>Type</th>
+                            <th>Amount</th>
+                            <th>Date</th>
+                            <th>Status</th>
+                            <th>Risk Score</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody id="claimsTableBody">
+                        <tr data-status="pending" data-risk="89">
+                            <td><strong>CLM-2024-0567</strong></td>
+                            <td>
+                                <div><strong>Sarah Mitchell</strong></div>
+                                <small class="text-muted">AUTO-45892</small>
+                            </td>
+                            <td>
+                                <div><strong>Auto Accident</strong></div>
+                                <small class="text-muted">Miami, FL</small>
+                            </td>
+                            <td><strong>$45,230</strong></td>
+                            <td>Jan 15, 2024</td>
+                            <td><span class="badge badge-warning">Pending</span></td>
+                            <td><span class="badge risk-high">89% High</span></td>
+                            <td>
+                                <button class="btn btn-outline-success btn-action" title="Approve">
+                                    <i class="fas fa-check"></i>
+                                </button>
+                                <button class="btn btn-outline-danger btn-action" title="Reject">
+                                    <i class="fas fa-times"></i>
+                                </button>
+                                <button class="btn btn-outline-warning btn-action" title="Flag for Review">
+                                    <i class="fas fa-exclamation-triangle"></i>
+                                </button>
+                                <button class="btn btn-outline-secondary btn-action" title="More Actions">
+                                    <i class="fas fa-ellipsis-h"></i>
+                                </button>
+                            </td>
+                        </tr>
+                        <tr data-status="approved" data-risk="23">
+                            <td><strong>CLM-2024-0568</strong></td>
+                            <td>
+                                <div><strong>Michael Chen</strong></div>
+                                <small class="text-muted">HOME-23156</small>
+                            </td>
+                            <td>
+                                <div><strong>Water Damage</strong></div>
+                                <small class="text-muted">Phoenix, AZ</small>
+                            </td>
+                            <td><strong>$23,150</strong></td>
+                            <td>Jan 14, 2024</td>
+                            <td><span class="badge badge-success">Approved</span></td>
+                            <td><span class="badge risk-low">23% Low</span></td>
+                            <td>
+                                <button class="btn btn-outline-secondary btn-action" title="More Actions">
+                                    <i class="fas fa-ellipsis-h"></i>
+                                </button>
+                            </td>
+                        </tr>
+                        <tr data-status="fraud" data-risk="94">
+                            <td><strong>CLM-2024-0569</strong></td>
+                            <td>
+                                <div><strong>Jennifer Lopez</strong></div>
+                                <small class="text-muted">AUTO-78901</small>
+                            </td>
+                            <td>
+                                <div><strong>Auto Theft</strong></div>
+                                <small class="text-muted">Chicago, IL</small>
+                            </td>
+                            <td><strong>$78,900</strong></td>
+                            <td>Jan 13, 2024</td>
+                            <td><span class="badge badge-danger">Fraud</span></td>
+                            <td><span class="badge risk-high">94% High</span></td>
+                            <td>
+                                <button class="btn btn-outline-secondary btn-action" title="More Actions">
+                                    <i class="fas fa-ellipsis-h"></i>
+                                </button>
+                            </td>
+                        </tr>
+                        <tr data-status="approved" data-risk="15">
+                            <td><strong>CLM-2024-0570</strong></td>
+                            <td>
+                                <div><strong>David Williams</strong></div>
+                                <small class="text-muted">HOME-34567</small>
+                            </td>
+                            <td>
+                                <div><strong>Vandalism</strong></div>
+                                <small class="text-muted">Seattle, WA</small>
+                            </td>
+                            <td><strong>$12,750</strong></td>
+                            <td>Jan 12, 2024</td>
+                            <td><span class="badge badge-success">Approved</span></td>
+                            <td><span class="badge risk-low">15% Low</span></td>
+                            <td>
+                                <button class="btn btn-outline-secondary btn-action" title="More Actions">
+                                    <i class="fas fa-ellipsis-h"></i>
+                                </button>
+                            </td>
+                        </tr>
+                        <tr data-status="pending" data-risk="67">
+                            <td><strong>CLM-2024-0571</strong></td>
+                            <td>
+                                <div><strong>Lisa Johnson</strong></div>
+                                <small class="text-muted">AUTO-89012</small>
+                            </td>
+                            <td>
+                                <div><strong>Auto Accident</strong></div>
+                                <small class="text-muted">Dallas, TX</small>
+                            </td>
+                            <td><strong>$56,400</strong></td>
+                            <td>Jan 11, 2024</td>
+                            <td><span class="badge badge-warning">Pending</span></td>
+                            <td><span class="badge risk-medium">67% Medium</span></td>
+                            <td>
+                                <button class="btn btn-outline-success btn-action" title="Approve">
+                                    <i class="fas fa-check"></i>
+                                </button>
+                                <button class="btn btn-outline-danger btn-action" title="Reject">
+                                    <i class="fas fa-times"></i>
+                                </button>
+                                <button class="btn btn-outline-warning btn-action" title="Flag for Review">
+                                    <i class="fas fa-exclamation-triangle"></i>
+                                </button>
+                                <button class="btn btn-outline-secondary btn-action" title="More Actions">
+                                    <i class="fas fa-ellipsis-h"></i>
+                                </button>
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </main>
+
+    <script>
+        // Filter functionality
+        const searchInput = document.getElementById('searchInput');
+        const statusFilter = document.getElementById('statusFilter');
+        const riskFilter = document.getElementById('riskFilter');
+        const tableBody = document.getElementById('claimsTableBody');
+        const claimCount = document.getElementById('claimCount');
+
+        function filterTable() {
+            const searchTerm = searchInput.value.toLowerCase();
+            const statusValue = statusFilter.value;
+            const riskValue = riskFilter.value;
+            const rows = tableBody.querySelectorAll('tr');
+            let visibleCount = 0;
+
+            rows.forEach(row => {
+                const status = row.dataset.status;
+                const risk = parseInt(row.dataset.risk);
+                const text = row.textContent.toLowerCase();
+
+                const matchesSearch = text.includes(searchTerm);
+                const matchesStatus = statusValue === 'all' || status === statusValue;
+                let matchesRisk = riskValue === 'all';
+
+                if (riskValue === 'high') matchesRisk = risk >= 80;
+                else if (riskValue === 'medium') matchesRisk = risk >= 50 && risk < 80;
+                else if (riskValue === 'low') matchesRisk = risk < 50;
+
+                if (matchesSearch && matchesStatus && matchesRisk) {
+                    row.style.display = '';
+                    visibleCount++;
+                } else {
+                    row.style.display = 'none';
+                }
+            });
+
+            claimCount.textContent = visibleCount;
+        }
+
+        searchInput.addEventListener('input', filterTable);
+        statusFilter.addEventListener('change', filterTable);
+        riskFilter.addEventListener('change', filterTable);
+
+        // Action button handlers
+        document.addEventListener('click', function(e) {
+            if (e.target.closest('.btn-action')) {
+                const btn = e.target.closest('.btn-action');
+                const title = btn.getAttribute('title');
+                const row = btn.closest('tr');
+                const claimId = row.querySelector('strong').textContent;
+                
+                if (title.includes('Approve')) {
+                    alert(`Approving claim ${claimId}`);
+                } else if (title.includes('Reject')) {
+                    alert(`Rejecting claim ${claimId}`);
+                } else if (title.includes('Flag')) {
+                    alert(`Flagging claim ${claimId} for review`);
+                } else if (title.includes('More')) {
+                    alert(`More actions for claim ${claimId}`);
+                }
+            }
+        });
+    </script>
+</body>
+</html>

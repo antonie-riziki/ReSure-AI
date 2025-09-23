@@ -1,1 +1,430 @@
 <!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ReinsureGuard Pro - Advanced Claims Processing & Fraud Detection Platform</title>
+    <meta name="description" content="Professional reinsurance platform for claims processing and fraud detection with advanced analytics and AI-powered insights.">
+    <meta name="author" content="ReinsureGuard Pro">
+    
+    <!-- Open Graph Meta Tags -->
+    <meta property="og:title" content="ReinsureGuard Pro - Enterprise Reinsurance Platform">
+    <meta property="og:description" content="Advanced Claims Processing & Fraud Detection Platform for Professional Reinsurance Operations">
+    <meta property="og:type" content="website">
+    <meta property="og:image" content="/og-image.png">
+    
+    <!-- Twitter Card Meta Tags -->
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:title" content="ReinsureGuard Pro">
+    <meta name="twitter:description" content="Advanced Claims Processing & Fraud Detection Platform">
+    
+    <!-- Bootstrap 5 CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+    <!-- Font Awesome -->
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+    <!-- Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    
+    <style>
+        :root {
+            --primary: 220 90% 56%;
+            --primary-hover: 220 85% 50%;
+            --primary-light: 220 95% 70%;
+            --primary-foreground: 0 0% 98%;
+            --background: 0 0% 100%;
+            --foreground: 222 84% 5%;
+            --card: 0 0% 100%;
+            --card-foreground: 222 84% 5%;
+            --muted: 210 40% 98%;
+            --muted-foreground: 215 16% 47%;
+            --accent: 210 40% 95%;
+            --border: 214 32% 91%;
+            --success: 142 76% 36%;
+            --warning: 38 92% 50%;
+            --destructive: 0 84% 60%;
+            --secondary: 210 40% 95%;
+        }
+        
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Inter', sans-serif;
+            line-height: 1.6;
+            color: hsl(var(--foreground));
+            background-color: hsl(var(--background));
+        }
+        
+        .gradient-primary {
+            background: linear-gradient(135deg, hsl(var(--primary)), hsl(var(--primary-hover)), hsl(var(--primary-light)));
+        }
+        
+        .card-professional {
+            background: hsl(var(--card));
+            border: 1px solid hsl(var(--border));
+            border-radius: 12px;
+            transition: all 0.3s ease;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.04);
+        }
+        
+        .card-professional:hover {
+            transform: translateY(-4px);
+            box-shadow: 0 8px 25px rgba(0,0,0,0.1);
+        }
+        
+        .btn-primary-custom {
+            background-color: hsl(var(--primary-foreground));
+            color: hsl(var(--primary));
+            border: none;
+            font-weight: 600;
+            transition: all 0.3s ease;
+        }
+        
+        .btn-primary-custom:hover {
+            background-color: hsl(var(--primary-foreground) / 0.9);
+            color: hsl(var(--primary));
+            transform: translateY(-1px);
+        }
+        
+        .btn-outline-custom {
+            border: 2px solid hsl(var(--primary-foreground) / 0.3);
+            color: hsl(var(--primary-foreground));
+            background: transparent;
+            font-weight: 600;
+            transition: all 0.3s ease;
+        }
+        
+        .btn-outline-custom:hover {
+            background-color: hsl(var(--primary-foreground) / 0.1);
+            color: hsl(var(--primary-foreground));
+            border-color: hsl(var(--primary-foreground) / 0.5);
+        }
+        
+        .stats-icon {
+            width: 48px;
+            height: 48px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 0 auto 1rem;
+        }
+        
+        .feature-icon {
+            width: 48px;
+            height: 48px;
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-bottom: 1rem;
+        }
+        
+        .text-success { color: hsl(var(--success)) !important; }
+        .text-warning { color: hsl(var(--warning)) !important; }
+        .text-destructive { color: hsl(var(--destructive)) !important; }
+        .text-primary-custom { color: hsl(var(--primary)) !important; }
+        .text-muted { color: hsl(var(--muted-foreground)) !important; }
+        
+        .bg-success-light { background-color: hsl(var(--success) / 0.1) !important; }
+        .bg-warning-light { background-color: hsl(var(--warning) / 0.1) !important; }
+        .bg-destructive-light { background-color: hsl(var(--destructive) / 0.1) !important; }
+        .bg-primary-light { background-color: hsl(var(--primary) / 0.1) !important; }
+        .bg-secondary-light { background-color: hsl(var(--secondary)) !important; }
+        
+        .hero-overlay {
+            background: linear-gradient(rgba(0,0,0,0.1), rgba(0,0,0,0.1));
+        }
+        
+        .footer-bg {
+            background-color: hsl(var(--card));
+            border-top: 1px solid hsl(var(--border));
+        }
+        
+        .footer-link {
+            color: hsl(var(--muted-foreground));
+            text-decoration: none;
+            transition: color 0.3s ease;
+        }
+        
+        .footer-link:hover {
+            color: hsl(var(--foreground));
+        }
+        
+        @media (max-width: 768px) {
+            .hero-title {
+                font-size: 2.5rem !important;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- Hero Section -->
+    <section class="gradient-primary text-white position-relative">
+        <div class="hero-overlay position-absolute w-100 h-100"></div>
+        <div class="container position-relative py-5">
+            <div class="row justify-content-center text-center py-5">
+                <div class="col-lg-8">
+                    <div class="badge bg-light text-dark px-3 py-2 mb-4">
+                        <i class="fas fa-building me-2"></i>
+                        Enterprise Reinsurance Platform
+                    </div>
+                    <h1 class="display-4 fw-bold mb-4 hero-title">ReinsureGuard Pro</h1>
+                    <p class="lead mb-4 opacity-90">
+                        Advanced Claims Processing & Fraud Detection Platform for Professional Reinsurance Operations
+                    </p>
+                    <div class="d-flex flex-column flex-sm-row gap-3 justify-content-center">
+                        <a href="dashboard.html" class="btn btn-primary-custom btn-lg px-4">
+                            Access Dashboard
+                            <i class="fas fa-arrow-right ms-2"></i>
+                        </a>
+                        <button class="btn btn-outline-custom btn-lg px-4">
+                            View Documentation
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Stats Section -->
+    <section class="py-5" style="background-color: hsl(var(--accent) / 0.3);">
+        <div class="container">
+            <div class="row g-4">
+                <div class="col-md-3">
+                    <div class="card card-professional text-center p-4">
+                        <div class="stats-icon bg-success-light">
+                            <i class="fas fa-check-circle text-success"></i>
+                        </div>
+                        <h3 class="fw-bold mb-2">98.7%</h3>
+                        <p class="text-muted mb-0">Fraud Detection Accuracy</p>
+                    </div>
+                </div>
+                <div class="col-md-3">
+                    <div class="card card-professional text-center p-4">
+                        <div class="stats-icon bg-primary-light">
+                            <i class="fas fa-database text-primary-custom"></i>
+                        </div>
+                        <h3 class="fw-bold mb-2">2.3M+</h3>
+                        <p class="text-muted mb-0">Claims Processed</p>
+                    </div>
+                </div>
+                <div class="col-md-3">
+                    <div class="card card-professional text-center p-4">
+                        <div class="stats-icon bg-warning-light">
+                            <i class="fas fa-clock text-warning"></i>
+                        </div>
+                        <h3 class="fw-bold mb-2">4.2 sec</h3>
+                        <p class="text-muted mb-0">Average Processing Time</p>
+                    </div>
+                </div>
+                <div class="col-md-3">
+                    <div class="card card-professional text-center p-4">
+                        <div class="stats-icon bg-destructive-light">
+                            <i class="fas fa-shield-alt text-destructive"></i>
+                        </div>
+                        <h3 class="fw-bold mb-2">$127M</h3>
+                        <p class="text-muted mb-0">Fraud Prevented</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Features Section -->
+    <section class="py-5">
+        <div class="container">
+            <div class="text-center mb-5">
+                <h2 class="fw-bold mb-3">Comprehensive Platform Features</h2>
+                <p class="text-muted lead">
+                    Everything you need to manage claims, detect fraud, and analyze patterns in one integrated platform
+                </p>
+            </div>
+            
+            <div class="row g-4">
+                <div class="col-lg-4 col-md-6">
+                    <div class="card card-professional h-100">
+                        <div class="card-body p-4">
+                            <div class="feature-icon bg-primary-light">
+                                <i class="fas fa-chart-bar text-primary-custom"></i>
+                            </div>
+                            <h5 class="fw-bold mb-3">Dashboard & Analytics</h5>
+                            <p class="text-muted mb-4">
+                                Real-time insights with comprehensive charts, KPIs, and performance metrics
+                            </p>
+                            <a href="dashboard.html" class="btn btn-outline-primary w-100">
+                                <i class="fas fa-eye me-2"></i>
+                                View Dashboard
+                            </a>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="col-lg-4 col-md-6">
+                    <div class="card card-professional h-100">
+                        <div class="card-body p-4">
+                            <div class="feature-icon bg-success-light">
+                                <i class="fas fa-database text-success"></i>
+                            </div>
+                            <h5 class="fw-bold mb-3">Claims Management</h5>
+                            <p class="text-muted mb-4">
+                                Streamlined workflow for processing, approving, and tracking insurance claims
+                            </p>
+                            <a href="claims.html" class="btn btn-outline-primary w-100">
+                                <i class="fas fa-eye me-2"></i>
+                                Manage Claims
+                            </a>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="col-lg-4 col-md-6">
+                    <div class="card card-professional h-100">
+                        <div class="card-body p-4">
+                            <div class="feature-icon bg-destructive-light">
+                                <i class="fas fa-shield-alt text-destructive"></i>
+                            </div>
+                            <h5 class="fw-bold mb-3">Fraud Detection</h5>
+                            <p class="text-muted mb-4">
+                                AI-powered fraud detection with risk scoring and detailed analysis
+                            </p>
+                            <a href="fraud.html" class="btn btn-outline-primary w-100">
+                                <i class="fas fa-eye me-2"></i>
+                                Detect Fraud
+                            </a>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="col-lg-4 col-md-6">
+                    <div class="card card-professional h-100">
+                        <div class="card-body p-4">
+                            <div class="feature-icon bg-warning-light">
+                                <i class="fas fa-map-marker-alt text-warning"></i>
+                            </div>
+                            <h5 class="fw-bold mb-3">Regional Analysis</h5>
+                            <p class="text-muted mb-4">
+                                Interactive mapping with geographic pattern analysis and risk assessment
+                            </p>
+                            <a href="map.html" class="btn btn-outline-primary w-100">
+                                <i class="fas fa-eye me-2"></i>
+                                View Map
+                            </a>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="col-lg-4 col-md-6">
+                    <div class="card card-professional h-100">
+                        <div class="card-body p-4">
+                            <div class="feature-icon bg-primary-light">
+                                <i class="fas fa-trending-up text-primary-custom"></i>
+                            </div>
+                            <h5 class="fw-bold mb-3">Reports & Insights</h5>
+                            <p class="text-muted mb-4">
+                                Comprehensive reporting with trend analysis and predictive insights
+                            </p>
+                            <button class="btn btn-outline-secondary w-100" disabled>
+                                <i class="fas fa-trending-up me-2"></i>
+                                Coming Soon
+                            </button>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="col-lg-4 col-md-6">
+                    <div class="card card-professional h-100">
+                        <div class="card-body p-4">
+                            <div class="feature-icon bg-secondary-light">
+                                <i class="fas fa-users"></i>
+                            </div>
+                            <h5 class="fw-bold mb-3">User Management</h5>
+                            <p class="text-muted mb-4">
+                                Role-based access control and user permission management
+                            </p>
+                            <button class="btn btn-outline-secondary w-100" disabled>
+                                <i class="fas fa-users me-2"></i>
+                                Coming Soon
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- CTA Section -->
+    <section class="gradient-primary text-white py-5">
+        <div class="container text-center py-4">
+            <h2 class="fw-bold mb-3">Ready to Get Started?</h2>
+            <p class="lead mb-4 opacity-90">
+                Access the comprehensive reinsurance platform and start processing claims with advanced fraud detection
+            </p>
+            <a href="dashboard.html" class="btn btn-primary-custom btn-lg px-4">
+                Launch Platform
+                <i class="fas fa-arrow-right ms-2"></i>
+            </a>
+        </div>
+    </section>
+
+    <!-- Footer -->
+    <footer class="footer-bg py-5">
+        <div class="container">
+            <div class="row g-4">
+                <div class="col-lg-3 col-md-6">
+                    <h5 class="fw-bold mb-3">
+                        <i class="fas fa-building text-primary-custom me-2"></i>
+                        ReinsureGuard Pro
+                    </h5>
+                    <p class="text-muted small">
+                        Professional reinsurance platform for claims processing and fraud detection.
+                    </p>
+                </div>
+                
+                <div class="col-lg-3 col-md-6">
+                    <h6 class="fw-bold mb-3">Platform</h6>
+                    <ul class="list-unstyled">
+                        <li class="mb-2"><a href="dashboard.html" class="footer-link small">Dashboard</a></li>
+                        <li class="mb-2"><a href="claims.html" class="footer-link small">Claims</a></li>
+                        <li class="mb-2"><a href="fraud.html" class="footer-link small">Fraud Detection</a></li>
+                        <li class="mb-2"><a href="map.html" class="footer-link small">Regional Analysis</a></li>
+                    </ul>
+                </div>
+                
+                <div class="col-lg-3 col-md-6">
+                    <h6 class="fw-bold mb-3">Support</h6>
+                    <ul class="list-unstyled">
+                        <li class="mb-2"><a href="#" class="footer-link small">Documentation</a></li>
+                        <li class="mb-2"><a href="#" class="footer-link small">API Reference</a></li>
+                        <li class="mb-2"><a href="#" class="footer-link small">Help Center</a></li>
+                        <li class="mb-2"><a href="#" class="footer-link small">Contact Support</a></li>
+                    </ul>
+                </div>
+                
+                <div class="col-lg-3 col-md-6">
+                    <h6 class="fw-bold mb-3">Security</h6>
+                    <ul class="list-unstyled">
+                        <li class="mb-2"><a href="#" class="footer-link small">Security Policy</a></li>
+                        <li class="mb-2"><a href="#" class="footer-link small">Privacy Policy</a></li>
+                        <li class="mb-2"><a href="#" class="footer-link small">Compliance</a></li>
+                        <li class="mb-2"><a href="#" class="footer-link small">Terms of Service</a></li>
+                    </ul>
+                </div>
+            </div>
+            
+            <hr class="my-4">
+            <div class="text-center">
+                <p class="text-muted small mb-0">
+                    &copy; 2024 ReinsureGuard Pro. All rights reserved. Built for professional reinsurance operations.
+                </p>
+            </div>
+        </div>
+    </footer>
+
+    <!-- Bootstrap 5 JS -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>
