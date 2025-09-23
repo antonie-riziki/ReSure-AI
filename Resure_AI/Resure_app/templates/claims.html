@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>ClaimShield - Claims Management</title>
+    <title>Reinsure AI - Claims Management</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
     <style>
@@ -268,58 +268,8 @@
     </style>
 </head>
 <body>
-    <!-- Sidebar -->
-    <nav class="sidebar">
-        <div class="sidebar-header">
-            <div class="logo">
-                <div class="logo-icon">
-                    <i class="fas fa-shield-alt"></i>
-                </div>
-                <div class="logo-text">
-                    <h2>ClaimShield</h2>
-                    <p>Insurance Platform</p>
-                </div>
-            </div>
-        </div>
-        <div class="sidebar-nav">
-            <div class="nav-item">
-                <a href="dashboard.html" class="nav-link">
-                    <i class="fas fa-chart-bar"></i>
-                    Dashboard
-                </a>
-            </div>
-            <div class="nav-item">
-                <a href="claims.html" class="nav-link active">
-                    <i class="fas fa-file-alt"></i>
-                    Claims Management
-                </a>
-            </div>
-            <div class="nav-item">
-                <a href="fraud.html" class="nav-link">
-                    <i class="fas fa-shield-alt"></i>
-                    Fraud Detection
-                </a>
-            </div>
-            <div class="nav-item">
-                <a href="map.html" class="nav-link">
-                    <i class="fas fa-map"></i>
-                    Regional Analysis
-                </a>
-            </div>
-            <div class="nav-item">
-                <a href="reports.html" class="nav-link">
-                    <i class="fas fa-chart-pie"></i>
-                    Reports & Analytics
-                </a>
-            </div>
-            <div class="nav-item">
-                <a href="users.html" class="nav-link">
-                    <i class="fas fa-users"></i>
-                    User Management
-                </a>
-            </div>
-        </div>
-    </nav>
+    
+    {% include 'sidebar.html' %}
 
     <!-- Main Content -->
     <main class="main-content">
