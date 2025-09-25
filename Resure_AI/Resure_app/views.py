@@ -22,7 +22,7 @@ load_dotenv()
 
 sys.path.insert(1, './Resure_app')
 
-# from rag_model import get_qa_chain, query_system
+from rag_model import get_qa_chain, query_system
 # from image_generation import google_image_generator
 
 # Initialize Africa's Talking and Google Generative AI
@@ -42,6 +42,50 @@ otp_storage = {}
 
 
 # Custom modules
+
+
+def get_gemini_response(prompt):
+    model = genai.GenerativeModel("gemini-2.0-flash",
+
+        system_instruction=f"""
+
+        You are ElevateHR — a helpful, professional, and smart HR assistant. 
+        You support employees, managers, and HR staff with information on recruitment, onboarding, employee wellness, leave policies, performance management, and workplace culture.
+
+        Guidelines:
+        - Use a warm, clear, and professional tone.
+        - Keep answers short and relevant (2–4 sentences max).
+        - If unsure or a question is out of scope, recommend contacting HR directly.
+        - Avoid making assumptions about company-specific policies unless provided.
+        - Be friendly but not too casual. Respectful and informative.
+
+        Example Output:
+        - "Hi there! You can apply for leave through the Employee Portal under 'My Requests'. Need help navigating it?"
+        - "Sure! During onboarding, you’ll get access to all core HR systems and meet your assigned buddy."
+        
+        Donts:
+        - Don't provide personal opinions or unverified information.
+        - Don't discuss sensitive topics like salary negotiations or personal grievances.
+        - Don't use jargon or overly technical language.
+        - Don't make assumptions about the user's knowledge or experience level.
+        - Don't provide legal or financial advice.
+        - Don't engage in casual conversation unrelated to HR, Employee, Managerial, Employer or Work Environment topics.
+        
+        """)
+
+    response = model.generate_content(
+        prompt,
+        generation_config=genai.GenerationConfig(
+            max_output_tokens=1000,
+            temperature=1.5,
+        )
+
+    )
+
+    return response.text
+
+
+
 
 def generate_otp(length=6):
     characters = string.ascii_uppercase + string.digits
@@ -142,6 +186,21 @@ def verify_otp_view(request):
             messages.error(request, "Invalid OTP. Please try again.")
             return render(request, 'verify_otp.html', {'phone': phone, 'first_name': first_name})
     return redirect('registration')
+
+
+@csrf_exempt
+def chatbot_response(request):
+    if request.method == 'POST':
+        data = json.loads(request.body)
+        user_message = data.get('message', '')
+
+        if user_message:
+            bot_reply = get_gemini_response(user_message)
+            return JsonResponse({'response': bot_reply})
+        else:
+            return JsonResponse({'response': "Sorry, I didn't catch that."}, status=400)
+
+
 
 
 @csrf_exempt

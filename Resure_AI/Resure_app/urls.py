@@ -19,6 +19,7 @@ urlpatterns = [
     # path('welcome-message/', views.welcome_message_view, name='welcome_message'),
     path('verify-otp/', views.verify_otp_view, name='verify_otp'),
     path('login/', views.login, name='login'),
+     path('chatbot-response/', views.chatbot_response, name='chatbot_response'),
 
     path("dashboard/", views.dashboard, name="dashboard"),
     path("claims/", views.claims, name="claims"),
