@@ -535,8 +535,39 @@ def merge_pdfs(user_id: str, base_dir: str = "users_data", output_name: str = "m
 
 
 
+
+
+
+
+
+
 # ===============================================================================
 # ==============================================================================
+
+
+
+
+@csrf_exempt
+def convert_attachments_to_pdf(request):
+    if request.method == "POST":
+        user_id = request.POST.get("user_id", "user123")
+
+        try:
+            convert_docx_to_pdf(user_id, base_dir="users_data")
+            return JsonResponse({"status": "success", "message": "All DOCX files converted to PDF."}, safe=False, json_dumps_params={"default": lambda x: x.decode() if isinstance(x, bytes) else str(x)})
+        except Exception as e:
+            return JsonResponse({"status": "error", "message": str(e)}, safe=False, json_dumps_params={"default": lambda x: x.decode() if isinstance(x, bytes) else str(x)})
+
+    return JsonResponse({"status": "error", "message": "Invalid request"})
+
+
+
+
+
+
+
+
+
 
 # Create your views here.
 def home(request):

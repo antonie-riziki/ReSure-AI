@@ -444,6 +444,9 @@
             </div>
         </div>
 
+
+        <button id="convertBtn" class="btn btn-primary">Convert Attachments to PDF</button>
+
         <!-- Message Content & Metadata Section -->
         <div class="card" id="messageContent" style="display: none;">
             <div class="card-header">
@@ -694,6 +697,29 @@
     let map;
     let markers = [];
     let fraudChart, keywordChart;
+
+    // Trigger the convert button
+    document.getElementById("convertBtn").addEventListener("click", function() {
+        const formData = new FormData();
+        formData.append("user_id", "user123"); // Replace with dynamic user_id if available
+
+        fetch("/convert_attachments_to_pdf/", {
+            method: "POST",
+            body: formData
+        })
+        .then(res => res.json())
+        .then(data => {
+            if (data.status === "success") {
+                alert("Conversion successful! Check attachments folder for PDFs.");
+            } else {
+                alert("Conversion failed: " + data.message);
+            }
+        })
+        .catch(err => {
+            console.error("Error:", err);
+            alert("Something went wrong during conversion.");
+        });
+    });
 
     // File upload functionality
     document.addEventListener('DOMContentLoaded', function () {
