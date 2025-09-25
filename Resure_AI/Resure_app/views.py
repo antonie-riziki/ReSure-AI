@@ -125,7 +125,7 @@ def welcome_message(first_name, phone_number):
 
     # Set your shortCode or senderId
     sender = 20880
-
+ 
     try:
         response = sms.send(message, recipients, sender)
 
@@ -369,6 +369,43 @@ def merge_pdfs(user_id: str, base_dir: str = "users_data", output_name: str = "m
 # ==============================================================================
 
 
+
+
+# @csrf_exempt
+# def upload_msg(request):
+#     try:
+#         if request.method == "POST" and request.FILES.get("file"):
+#             uploaded_file = request.FILES["file"]
+
+#             # Generate user_id (or use logged-in user)
+#             user_id = request.POST.get("user_id", str(uuid.uuid4()))
+
+#             # Save uploaded file
+#             user_dir = os.path.join("users_data", user_id)
+#             os.makedirs(user_dir, exist_ok=True)
+
+#             file_path = os.path.join(user_dir, uploaded_file.name)
+#             with open(file_path, "wb+") as dest:
+#                 for chunk in uploaded_file.chunks():
+#                     dest.write(chunk)
+
+#             # Process file
+#             metadata = extract_msg_file(file_path, user_id)
+  
+#             return JsonResponse({
+#                 "status": "success",
+#                 "user_id": user_id,
+#                 "metadata": metadata,
+#             }, safe=False, json_dumps_params={"default": lambda x: x.decode() if isinstance(x, bytes) else str(x)})
+
+
+#         return JsonResponse({"status": "error", "message": "No file uploaded"}, status=400)
+
+#     except Exception as e:
+#         # Catch any crash and return as JSON
+#         return JsonResponse({"status": "error", "message": str(e)}, status=500)
+
+
 @csrf_exempt
 def upload_msg(request):
     if request.method == "POST":
@@ -403,12 +440,11 @@ def upload_msg(request):
         return JsonResponse({
             "status": "success",
             "user_id": user_id,
-            "metadata": metadata
-        })
+            "metadata": metadata,
+        }, safe=False, json_dumps_params={"default": lambda x: x.decode() if isinstance(x, bytes) else str(x)})
+
 
     return JsonResponse({"status": "error", "message": "Invalid request"})
-
-
 
 
 
