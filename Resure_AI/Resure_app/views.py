@@ -20,6 +20,7 @@ from dotenv import load_dotenv
 import os
 import extract_msg
 import shutil
+import uuid
 from datetime import datetime
 
 load_dotenv()
@@ -224,6 +225,13 @@ def chatbot_response(request):
 # Extracting Files and analyzing them
 
 
+# file_path = 
+# user_id = "user123"
+# source_dir = f"users_data/{user_id}/attachments"
+# pdf_path = os.path.join(source_dir, "merged.pdf")
+
+
+
 def extract_msg_file(file_path: str, user_id: str, output_base: str = "users_data"):
     """
     Extracts metadata and attachments from a .msg file. 
@@ -361,25 +369,36 @@ def merge_pdfs(user_id: str, base_dir: str = "users_data", output_name: str = "m
 # ==============================================================================
 
 
-@csrf_exempt  # optional, if you don't use CSRF tokens in JS
+@csrf_exempt
 def upload_msg(request):
-    if request.method == "POST" and request.FILES.get("file"):
-        uploaded_file = request.FILES["file"]
+    if request.method == "POST":
+        user_id = request.POST.get("user_id", "user123")
+        uploaded_file = request.FILES.get("file")
 
-        # Generate user_id (could also come from logged-in user)
-        user_id = request.POST.get("user_id", str(uuid.uuid4()))
+        if not uploaded_file:
+            return JsonResponse({"status": "error", "message": "No file uploaded"})
 
-        # Save uploaded .msg temporarily
-        user_dir = os.path.join("users_data", user_id)
+        # Save uploaded .msg to user's folder
+        base_dir = "users_data"
+        user_dir = os.path.join(base_dir, user_id)
         os.makedirs(user_dir, exist_ok=True)
 
         file_path = os.path.join(user_dir, uploaded_file.name)
-        with open(file_path, "wb+") as dest:
+        with open(file_path, "wb+") as f:
             for chunk in uploaded_file.chunks():
-                dest.write(chunk)
+                f.write(chunk)
 
-        # Process with your logic
-        metadata = extract_msg_file(file_path, user_id)
+        # Extract .msg attachments
+        try:
+            metadata = extract_msg_file(file_path, user_id)
+        except Exception as e:
+            return JsonResponse({"status": "error", "message": str(e)})
+
+        # Convert any .docx to .pdf inside attachments
+        try:
+            convert_docx_to_pdf(user_id, base_dir=base_dir)
+        except Exception as e:
+            print(f"⚠️ Docx→PDF conversion failed: {e}")
 
         return JsonResponse({
             "status": "success",
@@ -387,11 +406,87 @@ def upload_msg(request):
             "metadata": metadata
         })
 
-    return JsonResponse({"status": "error", "message": "No file uploaded"}, status=400)
+    return JsonResponse({"status": "error", "message": "Invalid request"})
 
 
 
 
+
+import os
+from docx2pdf import convert
+
+def convert_docx_to_pdf(user_id: str, base_dir: str = "users_data"):
+    """
+    Loops over user's attachments folder, converts .docx files to .pdf,
+    and saves them in the same folder.
+
+    Args:
+        user_id (str): User identifier (e.g., 'user123')
+        base_dir (str): Base directory where user folders are stored
+    """
+    attach_dir = os.path.join(base_dir, user_id, "attachments")
+
+    if not os.path.exists(attach_dir):
+        raise FileNotFoundError(f"Attachment folder not found: {attach_dir}")
+
+    for filename in os.listdir(attach_dir):
+        if filename.lower().endswith(".docx"):
+            docx_path = os.path.join(attach_dir, filename)
+            pdf_path = os.path.splitext(docx_path)[0] + ".pdf"
+
+            try:
+                convert(docx_path, pdf_path)
+                print(f"✅ Converted: {filename} → {os.path.basename(pdf_path)}")
+            except Exception as e:
+                print(f"⚠️ Failed to convert {filename}: {e}")
+
+
+
+
+import os
+from PyPDF2 import PdfMerger
+
+def merge_pdfs(user_id: str, base_dir: str = "users_data", output_name: str = "merged.pdf"):
+    """
+    Merges all PDF files in a user's attachment folder into one PDF.
+
+    Args:
+        user_id (str): User identifier (e.g., 'user123')
+        base_dir (str): Base directory where user folders are stored
+        output_name (str): Name of the merged PDF file
+
+    Returns:
+        str: Path to the merged PDF file
+    """
+    attach_dir = os.path.join(base_dir, user_id, "attachments")
+
+    if not os.path.exists(attach_dir):
+        raise FileNotFoundError(f"Attachment folder not found: {attach_dir}")
+
+    # Find all PDFs in the folder
+    pdf_files = [f for f in os.listdir(attach_dir) if f.lower().endswith(".pdf")]
+
+    if not pdf_files:
+        raise FileNotFoundError(f"No PDF files found in {attach_dir}")
+
+    pdf_files.sort()  # Optional: merge in alphabetical order
+
+    merger = PdfMerger()
+
+    try:
+        for pdf in pdf_files:
+            merger.append(os.path.join(attach_dir, pdf))
+
+        output_path = os.path.join(attach_dir, output_name)
+        merger.write(output_path)
+        merger.close()
+
+        print(f"✅ Merged {len(pdf_files)} PDFs into: {output_path}")
+        return output_path
+
+    except Exception as e:
+        print(f"⚠️ Failed to merge PDFs: {e}")
+        return None
 
 
 

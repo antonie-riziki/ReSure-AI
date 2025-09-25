@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Message Analysis - ClaimGuard Pro</title>
+    <title>Message Analysis - Reinsure AI </title>
    
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
@@ -423,7 +423,13 @@
                     <i class="fas fa-cloud-upload-alt fa-3x text-primary mb-3"></i>
                     <h5>Drop .msg files here or click to browse</h5>
                     <p class="text-muted">Supported formats: .msg, .eml</p>
-                    <input type="file" id="fileInput" accept=".msg,.eml" style="display: none;">
+                    <form action="/upload_msg/" method="POST" enctype="multipart/form-data">
+                        {% csrf_token %}
+                        <input type="file" id="fileInput" accept=".msg,.eml" style="display:none;">
+                        
+                        <!-- <button type="submit">Upload</button> -->
+                    </form>
+                    <!-- <input type="file" id="fileInput" accept=".msg,.eml" style="display: none;"> -->
                 </div>
                 <div id="uploadStatus" class="mt-3" style="display: none;">
                     <div class="d-flex align-items-center">
@@ -684,183 +690,182 @@
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 
     <script>
-        // Global variables
-        let map;
-        let markers = [];
-        let fraudChart, keywordChart;
+    // Global variables
+    let map;
+    let markers = [];
+    let fraudChart, keywordChart;
 
-        function simulateFileUpload(file) {
-        const formData = new FormData();
-        formData.append("file", file);
-        formData.append("user_id", "user123"); // Or dynamically set
+    // File upload functionality
+    document.addEventListener('DOMContentLoaded', function () {
+        const dropzone = document.getElementById('dropzone');
+        const fileInput = document.getElementById('fileInput');
+        const uploadStatus = document.getElementById('uploadStatus');
 
-        fetch("/upload_msg/", {
-            method: "POST",
-            body: formData,
-        })
-        .then(response => response.json())
-        .then(data => {
-            if (data.status === "success") {
-                dropzone.classList.add('file-uploaded');
-                dropzone.innerHTML = `
-                    <i class="fas fa-check-circle fa-3x text-success mb-3"></i>
-                    <h5>File uploaded successfully!</h5>
-                    <p class="text-muted">Processing message content...</p>
-                `;
+        // Trigger file input when clicking dropzone
+        dropzone.addEventListener('click', () => fileInput.click());
 
-                setTimeout(() => {
-                    uploadStatus.style.display = 'block';
-                    document.getElementById('fileName').textContent = file.name;
-                    showAllSections();
-
-                    // Here you can display extracted metadata (subject, sender, etc.)
-                    console.log("Extracted metadata:", data.metadata);
-
-                    initializeCharts();
-                    initializeMap();
-                }, 2000);
-            } else {
-                alert("Upload failed: " + data.message);
+        // Drag/drop handling
+        dropzone.addEventListener('dragover', e => {
+            e.preventDefault();
+            dropzone.classList.add('dragover');
+        });
+        dropzone.addEventListener('dragleave', () => dropzone.classList.remove('dragover'));
+        dropzone.addEventListener('drop', e => {
+            e.preventDefault();
+            dropzone.classList.remove('dragover');
+            if (e.dataTransfer.files.length > 0) {
+                uploadFile(e.dataTransfer.files[0]);
             }
-        })
-        .catch(err => {
-            console.error("Upload error:", err);
-            alert("Something went wrong while uploading.");
+        });
+
+        // Manual file selection
+        fileInput.addEventListener('change', e => {
+            if (e.target.files.length > 0) {
+                uploadFile(e.target.files[0]);
+            }
+        });
+
+        // Upload logic
+        function uploadFile(file) {
+            const formData = new FormData();
+            formData.append("file", file);
+            formData.append("user_id", "user123"); // replace with logged-in user if available
+
+            fetch("/upload_msg/", {
+                method: "POST",
+                body: formData,
+            })
+                .then(res => res.json())
+                .then(data => {
+                    if (data.status === "success") {
+                        // Update UI
+                        dropzone.classList.add('file-uploaded');
+                        dropzone.innerHTML = `
+                            <i class="fas fa-check-circle fa-3x text-success mb-3"></i>
+                            <h5>File uploaded successfully!</h5>
+                            <p class="text-muted">Processing message content...</p>
+                        `;
+
+                        uploadStatus.style.display = 'block';
+                        document.getElementById('fileName').textContent = file.name;
+
+                        // Debug: check metadata
+                        console.log("Metadata:", data.metadata);
+
+                        // Display extracted content
+                        if (data.metadata.subject) {
+                            document.getElementById('messageContent').innerHTML = `
+                                <strong>Subject:</strong> ${data.metadata.subject}<br>
+                                <strong>From:</strong> ${data.metadata.from}<br>
+                                <strong>Date:</strong> ${data.metadata.date}<br>
+                                <p>${data.metadata.body_text}</p>
+                            `;
+                        }
+
+                        // Show other sections
+                        showAllSections();
+                        initializeCharts();
+                        initializeMap();
+                    } else {
+                        alert("Upload failed: " + data.message);
+                    }
+                })
+                .catch(err => {
+                    console.error("Upload error:", err);
+                    alert("Something went wrong while uploading.");
+                });
+        }
+
+        // Show all dashboard sections
+        function showAllSections() {
+            const sections = ['messageContent', 'attachmentsSection', 'extractedMedia', 'analysisSection', 'mapSection'];
+            sections.forEach(id => {
+                const el = document.getElementById(id);
+                if (el) el.style.display = 'block';
+            });
+        }
+    });
+
+    // Initialize Charts
+    function initializeCharts() {
+        const fraudCtx = document.getElementById('fraudChart').getContext('2d');
+        fraudChart = new Chart(fraudCtx, {
+            type: 'doughnut',
+            data: {
+                labels: ['Low Risk', 'Medium Risk', 'High Risk'],
+                datasets: [{
+                    data: [85, 10, 5],
+                    backgroundColor: ['#10b981', '#f59e0b', '#ef4444'],
+                    borderWidth: 0
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: { position: 'bottom' }
+                }
+            }
+        });
+
+        const keywordCtx = document.getElementById('keywordChart').getContext('2d');
+        keywordChart = new Chart(keywordCtx, {
+            type: 'bar',
+            data: {
+                labels: ['Accident', 'Damage', 'Medical', 'Police', 'Insurance'],
+                datasets: [{
+                    label: 'Frequency',
+                    data: [8, 6, 4, 3, 5],
+                    backgroundColor: '#2563eb',
+                    borderRadius: 4
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: { legend: { display: false } },
+                scales: { y: { beginAtZero: true } }
+            }
         });
     }
 
+    // Initialize Map
+    function initializeMap() {
+        map = L.map('map').setView([40.7128, -74.0060], 12);
 
-        // Initialize Charts
-        function initializeCharts() {
-            // Fraud Risk Chart
-            const fraudCtx = document.getElementById('fraudChart').getContext('2d');
-            fraudChart = new Chart(fraudCtx, {
-                type: 'doughnut',
-                data: {
-                    labels: ['Low Risk', 'Medium Risk', 'High Risk'],
-                    datasets: [{
-                        data: [85, 10, 5],
-                        backgroundColor: ['#10b981', '#f59e0b', '#ef4444'],
-                        borderWidth: 0
-                    }]
-                },
-                options: {
-                    responsive: true,
-                    maintainAspectRatio: false,
-                    plugins: {
-                        legend: {
-                            position: 'bottom'
-                        }
-                    }
-                }
-            });
+        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+            attribution: '© OpenStreetMap contributors'
+        }).addTo(map);
 
-            // Keyword Frequency Chart
-            const keywordCtx = document.getElementById('keywordChart').getContext('2d');
-            keywordChart = new Chart(keywordCtx, {
-                type: 'bar',
-                data: {
-                    labels: ['Accident', 'Damage', 'Medical', 'Police', 'Insurance'],
-                    datasets: [{
-                        label: 'Frequency',
-                        data: [8, 6, 4, 3, 5],
-                        backgroundColor: '#2563eb',
-                        borderRadius: 4
-                    }]
-                },
-                options: {
-                    responsive: true,
-                    maintainAspectRatio: false,
-                    plugins: {
-                        legend: {
-                            display: false
-                        }
-                    },
-                    scales: {
-                        y: {
-                            beginAtZero: true
-                        }
-                    }
-                }
-            });
-        }
+        const locations = [
+            { coords: [40.7128, -74.0060], type: 'incident', title: 'Accident Location', description: 'Main Street & Oak Avenue intersection' },
+            { coords: [40.7200, -74.0100], type: 'medical', title: 'City General Hospital', description: 'Emergency room treatment location' },
+            { coords: [40.7050, -74.0150], type: 'repair', title: 'AutoFix Repair Shop', description: 'Vehicle damage assessment location' }
+        ];
 
-        // Initialize Map
-        function initializeMap() {
-            map = L.map('map').setView([40.7128, -74.0060], 12);
+        locations.forEach(loc => {
+            const marker = L.marker(loc.coords)
+                .addTo(map)
+                .bindPopup(`<b>${loc.title}</b><br>${loc.description}`);
+            marker.options.type = loc.type;
+            markers.push(marker);
+        });
+    }
 
-            L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-                attribution: '© OpenStreetMap contributors'
-            }).addTo(map);
+    // Filter map markers
+    function filterMarkers(type) {
+        document.querySelectorAll('.btn-group .btn').forEach(btn => btn.classList.remove('active'));
+        event.target.classList.add('active');
 
-            // Sample locations
-            const locations = [
-                {
-                    coords: [40.7128, -74.0060],
-                    type: 'incident',
-                    title: 'Accident Location',
-                    description: 'Main Street & Oak Avenue intersection',
-                    color: 'red'
-                },
-                {
-                    coords: [40.7200, -74.0100],
-                    type: 'medical',
-                    title: 'City General Hospital',
-                    description: 'Emergency room treatment location',
-                    color: 'blue'
-                },
-                {
-                    coords: [40.7050, -74.0150],
-                    type: 'repair',
-                    title: 'AutoFix Repair Shop',
-                    description: 'Vehicle damage assessment location',
-                    color: 'green'
-                }
-            ];
-
-            locations.forEach(location => {
-                const marker = L.marker(location.coords)
-                    .addTo(map)
-                    .bindPopup(`<b>${location.title}</b><br>${location.description}`);
-                
-                marker.options.type = location.type;
-                markers.push(marker);
-            });
-        }
-
-        // Filter map markers
-        function filterMarkers(type) {
-            // Update button states
-            document.querySelectorAll('.btn-group .btn').forEach(btn => {
-                btn.classList.remove('active');
-            });
-            event.target.classList.add('active');
-
-            // Filter markers
-            markers.forEach(marker => {
-                if (type === 'all' || marker.options.type === type) {
-                    marker.addTo(map);
-                } else {
-                    map.removeLayer(marker);
-                }
-            });
-        }
-
-        // Auto-trigger file upload simulation on page load for demo
-        setTimeout(() => {
-            const fakeFile = new File([''], 'claim_correspondence.msg', { type: 'application/octet-stream' });
-            document.getElementById('dropzone').click();
-            
-            setTimeout(() => {
-                const event = new Event('change');
-                const fileInput = document.getElementById('fileInput');
-                Object.defineProperty(event, 'target', {
-                    writable: false,
-                    value: { files: [fakeFile] }
-                });
-                fileInput.dispatchEvent(event);
-            }, 1000);
-        }, 3000);
+        markers.forEach(marker => {
+            if (type === 'all' || marker.options.type === type) {
+                marker.addTo(map);
+            } else {
+                map.removeLayer(marker);
+            }
+        });
+    }
     </script>
+
 </body>
 </html>
