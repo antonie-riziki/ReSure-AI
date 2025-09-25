@@ -28,4 +28,6 @@ urlpatterns = [
     path("map/", views.map, name="map"), 
 
     path("upload_msg/", views.upload_msg, name="upload_msg"),
+    path("convert_attachments_to_pdf/", views.convert_attachments_to_pdf, name="convert_attachments_to_pdf"),
+
 ]  
