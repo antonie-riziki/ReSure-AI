@@ -506,6 +506,15 @@
         </div>
 
 
+        <!-- Display Images Section -->
+        <div style="padding-top: 15px; padding-bottom: 20px;">
+            <button id="displayImagesBtn" class="btn btn-primary">
+                <i class="fas fa-images"></i> Display Images
+            </button>
+        </div>
+
+
+
 
 
 
@@ -523,12 +532,15 @@
                 </div>
             </div>
             <div class="card-body">
-                <div id="imagesCarousel" 
-                    style="display: flex; gap: 15px; overflow-x: auto; scroll-behavior: smooth; white-space: nowrap;">
+                <div id="imagesCarousel"
+                    style="display: flex; gap: 15px; overflow: hidden; scroll-behavior: smooth; width: 100%;">
                     <!-- JS will inject images here -->
                 </div>
             </div>
         </div>
+
+
+
 
 
         <!-- Analysis & Insights Section -->
@@ -960,42 +972,24 @@
             });
     });
 
-    // Image carousel functionality
-    function loadExtractedImages(userId = "user123") {
-        fetch(`/extract_images/?user_id=${userId}`)
-            .then(res => res.json())
-            .then(data => {
-                if (data.status === "success" && data.images.length > 0) {
-                    const carousel = document.getElementById("imagesCarousel");
-                    carousel.innerHTML = "";
+   
 
-                    data.images.forEach(imgUrl => {
-                        const item = `
-                            <div style="flex: 0 0 auto;">
-                                <img src="${imgUrl}" 
-                                    alt="Extracted Image" 
-                                    style="max-height: 200px; border-radius: 8px; box-shadow: 0 2px 6px rgba(0,0,0,0.2);">
-                            </div>
-                        `;
-                        carousel.insertAdjacentHTML("beforeend", item);
-                    });
+    // Display images button logic
+    function displayExtractedImages(images) {
+        const carousel = document.getElementById("imagesCarousel");
+        carousel.innerHTML = ""; // Clear old content
 
-                    document.getElementById("imagesSection").style.display = "block";
-                } else {
-                    console.log("No images found.");
-                }
-            })
-            .catch(err => console.error("Error loading images:", err));
+        images.forEach(imgUrl => {
+            const imgElem = document.createElement("img");
+            imgElem.src = imgUrl;
+            imgElem.style.height = "200px"; // standard height
+            imgElem.style.objectFit = "contain";
+            imgElem.classList.add("me-3");
+            carousel.appendChild(imgElem);
+        });
+
+        document.getElementById("imagesSection").style.display = "block";
     }
-
-    // Carousel navigation
-    document.getElementById("prevImageBtn").addEventListener("click", () => {
-        document.getElementById("imagesCarousel").scrollBy({ left: -250, behavior: "smooth" });
-    });
-
-    document.getElementById("nextImageBtn").addEventListener("click", () => {
-        document.getElementById("imagesCarousel").scrollBy({ left: 250, behavior: "smooth" });
-    });
 
 
     </script>

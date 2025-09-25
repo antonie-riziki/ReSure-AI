@@ -5,6 +5,7 @@ from django.core.files.storage import FileSystemStorage
 from django.http import JsonResponse, HttpResponse
 from django.views.decorators.http import require_POST
 from django.views.decorators.csrf import csrf_exempt
+from django.conf import settings
 from django.contrib import messages
 from django.shortcuts import render, redirect, get_object_or_404
 import africastalking
@@ -362,18 +363,7 @@ def merge_pdfs(user_id: str, base_dir: str = "users_data", output_name: str = "m
 
 
 
-
 def extract_images_only(user_id: str, base_dir: str = "users_data", merged_file: str = "merged.pdf"):
-    """
-    Extracts relevant images from a merged PDF.
-
-    - Skips very small logos/icons (width/height < 100px).
-    - Skips nearly blank images (avg brightness > 245).
-    - Saves filtered images into the user's attachment folder.
-    
-    Returns:
-        dict: {"images": [list of saved image paths]}
-    """
     attach_dir = os.path.join(base_dir, user_id, "attachments")
     pdf_path = os.path.join(attach_dir, merged_file)
 
@@ -381,8 +371,8 @@ def extract_images_only(user_id: str, base_dir: str = "users_data", merged_file:
         raise FileNotFoundError(f"Merged PDF not found: {pdf_path}")
 
     results = {"images": []}
-
     doc = fitz.open(pdf_path)
+
     for page_num in range(len(doc)):
         for img_index, img in enumerate(doc.get_page_images(page_num), start=1):
             xref = img[0]
@@ -392,27 +382,20 @@ def extract_images_only(user_id: str, base_dir: str = "users_data", merged_file:
 
             pil_img = Image.open(io.BytesIO(image_bytes))
             w, h = pil_img.size
-
-            # Skip small logos/icons
             if w < 100 or h < 100:
                 continue
 
-            # Skip nearly white/blank images
-            img_array = np.array(pil_img.convert("L"))
-            avg_brightness = img_array.mean()
-            if avg_brightness > 245:
-                continue
-
-            # Save relevant image
-            img_name = f"relevant_image_page{page_num+1}_{img_index}.{ext}"
+            img_name = f"extracted_page{page_num+1}_{img_index}.{ext}"
             img_path = os.path.join(attach_dir, img_name)
             pil_img.save(img_path)
-            results["images"].append(img_path)
+
+            # Convert path to URL
+            img_url = f"/media/{user_id}/attachments/{img_name}"
+            results["images"].append(img_url)
 
     doc.close()
-
-    print(f"✅ Extracted {len(results['images'])} relevant images")
     return results
+
 
 
 
@@ -685,15 +668,25 @@ def download_attachment(request):
 def extract_images_view(request):
     if request.method == "POST":
         user_id = request.POST.get("user_id", "user123")
+        print(f"Extracting images for user_id={user_id}")  # Debug log
 
         try:
             results = extract_images_only(user_id=user_id)
-            return JsonResponse({"status": "success", "images": results["images"]})
+            print(f"Extracted images: {results['images']}")
+
+            # Convert file system paths -> URLs
+            image_urls = []
+            for path in results["images"]:
+                rel_path = os.path.relpath(path, settings.MEDIA_ROOT)
+                url = settings.MEDIA_URL + rel_path.replace("\\", "/")
+                image_urls.append(url)
+
+            return JsonResponse({"status": "success", "images": image_urls})
         except Exception as e:
+            print(f"Error extracting images: {e}")
             return JsonResponse({"status": "error", "message": str(e)})
 
     return JsonResponse({"status": "error", "message": "Invalid request"})
-
 
 
 

@@ -126,7 +126,7 @@ STATICFILES_DIRS = (
 
 # Media files
 MEDIA_URL = '/media/'
-MEDIA_ROOT = os.path.join(BASE_DIR, 'static/img')
+MEDIA_ROOT = os.path.join(BASE_DIR, 'users_data')
 
 REST_FRAMEWORK = {
     # Use Django's standard `django.contrib.auth` permissions,
