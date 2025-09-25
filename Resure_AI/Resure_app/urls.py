@@ -22,7 +22,10 @@ urlpatterns = [
      path('chatbot-response/', views.chatbot_response, name='chatbot_response'),
 
     path("dashboard/", views.dashboard, name="dashboard"),
+    path("message-analysis/", views.message_analysis, name="message-analysis"),
     path("claims/", views.claims, name="claims"),
     path("fraud/", views.fraud, name="fraud"),
     path("map/", views.map, name="map"), 
+
+    path("upload_msg/", views.upload_msg, name="upload_msg"),
 ]  

@@ -17,6 +17,10 @@ import shutil
 import tempfile
 import google.generativeai as genai
 from dotenv import load_dotenv
+import os
+import extract_msg
+import shutil
+from datetime import datetime
 
 load_dotenv()
 
@@ -216,6 +220,193 @@ def chatbot_response(request):
             return JsonResponse({'response': "Sorry, I didn't catch that."}, status=400)
 
 
+
+# Extracting Files and analyzing them
+
+
+def extract_msg_file(file_path: str, user_id: str, output_base: str = "users_data"):
+    """
+    Extracts metadata and attachments from a .msg file. 
+
+    Args:
+        file_path (str): Path to the .msg file.
+        user_id (str): Unique identifier for the user (used to create folder).
+        output_base (str): Base folder where user data will be stored.
+
+    Returns:
+        dict: Extracted metadata (sender, recipients, subject, body, etc.)
+    """
+    # Ensure user-specific folder exists
+    user_folder = os.path.join(output_base, user_id, "attachments")
+    os.makedirs(user_folder, exist_ok=True)
+
+    # Parse the .msg file
+    msg = extract_msg.Message(file_path)
+
+    # Build metadata dictionary
+    metadata = {
+        "from": msg.sender,
+        "to": msg.to,
+        "cc": msg.cc,
+        "bcc": msg.bcc,
+        "date": msg.date,
+        "subject": msg.subject,
+        "body_text": msg.body,
+        "body_html": msg.htmlBody,
+        "headers": msg.headerDict,
+        "attachments": []
+    }
+
+    # Save attachments automatically
+    for att in msg.attachments:
+        filename = os.path.basename(att.longFilename or att.shortFilename or "attachment")
+        save_path = os.path.join(user_folder, filename)
+        att.save(customPath=user_folder)  # saves into the folder
+        metadata["attachments"].append(save_path)
+
+    # Close msg to release file lock
+    msg.close()
+
+    return metadata
+
+
+
+
+import os
+from docx2pdf import convert
+
+def convert_docx_to_pdf(user_id: str, base_dir: str = "users_data"):
+    """
+    Loops over user's attachments folder, converts .docx files to .pdf,
+    and saves them in the same folder.
+
+    Args:
+        user_id (str): User identifier (e.g., 'user123')
+        base_dir (str): Base directory where user folders are stored
+    """
+    attach_dir = os.path.join(base_dir, user_id, "attachments")
+
+    if not os.path.exists(attach_dir):
+        raise FileNotFoundError(f"Attachment folder not found: {attach_dir}")
+
+    for filename in os.listdir(attach_dir):
+        if filename.lower().endswith(".docx"):
+            docx_path = os.path.join(attach_dir, filename)
+            pdf_path = os.path.splitext(docx_path)[0] + ".pdf"
+
+            try:
+                convert(docx_path, pdf_path)
+                print(f"✅ Converted: {filename} → {os.path.basename(pdf_path)}")
+            except Exception as e:
+                print(f"⚠️ Failed to convert {filename}: {e}")
+
+
+
+import os
+from PyPDF2 import PdfMerger
+
+def merge_pdfs(user_id: str, base_dir: str = "users_data", output_name: str = "merged.pdf"):
+    """
+    Merges all PDF files in a user's attachment folder into one PDF.
+
+    Args:
+        user_id (str): User identifier (e.g., 'user123')
+        base_dir (str): Base directory where user folders are stored
+        output_name (str): Name of the merged PDF file
+
+    Returns:
+        str: Path to the merged PDF file
+    """
+    attach_dir = os.path.join(base_dir, user_id, "attachments")
+
+    if not os.path.exists(attach_dir):
+        raise FileNotFoundError(f"Attachment folder not found: {attach_dir}")
+
+    # Find all PDFs in the folder
+    pdf_files = [f for f in os.listdir(attach_dir) if f.lower().endswith(".pdf")]
+
+    if not pdf_files:
+        raise FileNotFoundError(f"No PDF files found in {attach_dir}")
+
+    pdf_files.sort()  # Optional: merge in alphabetical order
+
+    merger = PdfMerger()
+
+    try:
+        for pdf in pdf_files:
+            merger.append(os.path.join(attach_dir, pdf))
+
+        output_path = os.path.join(attach_dir, output_name)
+        merger.write(output_path)
+        merger.close()
+
+        print(f"✅ Merged {len(pdf_files)} PDFs into: {output_path}")
+        return output_path
+
+    except Exception as e:
+        print(f"⚠️ Failed to merge PDFs: {e}")
+        return None
+
+
+
+
+
+
+
+
+
+
+
+# ==============================================================================
+# ==============================================================================
+
+
+@csrf_exempt  # optional, if you don't use CSRF tokens in JS
+def upload_msg(request):
+    if request.method == "POST" and request.FILES.get("file"):
+        uploaded_file = request.FILES["file"]
+
+        # Generate user_id (could also come from logged-in user)
+        user_id = request.POST.get("user_id", str(uuid.uuid4()))
+
+        # Save uploaded .msg temporarily
+        user_dir = os.path.join("users_data", user_id)
+        os.makedirs(user_dir, exist_ok=True)
+
+        file_path = os.path.join(user_dir, uploaded_file.name)
+        with open(file_path, "wb+") as dest:
+            for chunk in uploaded_file.chunks():
+                dest.write(chunk)
+
+        # Process with your logic
+        metadata = extract_msg_file(file_path, user_id)
+
+        return JsonResponse({
+            "status": "success",
+            "user_id": user_id,
+            "metadata": metadata
+        })
+
+    return JsonResponse({"status": "error", "message": "No file uploaded"}, status=400)
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+# ===============================================================================
+# ==============================================================================
+
 # Create your views here.
 def home(request):
     return render(request, "index.html")
@@ -231,6 +422,10 @@ def login(request):
 
 def dashboard(request):
     return render(request, "dashboard.html")
+
+
+def message_analysis(request):
+    return render(request, "message-analysis.html")
 
 
 def claims(request):

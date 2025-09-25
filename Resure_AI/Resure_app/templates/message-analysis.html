@@ -4,38 +4,47 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Message Analysis - ClaimGuard Pro</title>
-    
-    <!-- Bootstrap 5 CSS -->
+   
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
-    <!-- FontAwesome -->
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <!-- Leaflet CSS -->
-    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     
     <style>
         :root {
-            --primary-color: #2563eb;
-            --primary-light: #60a5fa;
-            --primary-dark: #1d4ed8;
-            --secondary-color: #64748b;
-            --success-color: #10b981;
-            --warning-color: #f59e0b;
-            --danger-color: #ef4444;
-            --dark-color: #1e293b;
-            --light-color: #f8fafc;
-            --border-color: #e2e8f0;
+            --primary: 220 90% 56%;
+            --primary-hover: 220 85% 50%;
+            --primary-light: 220 95% 70%;
+            --primary-foreground: 0 0% 98%;
+            --background: 0 0% 100%;
+            --foreground: 222 84% 5%;
+            --card: 0 0% 100%;
+            --card-foreground: 222 84% 5%;
+            --muted: 210 40% 98%;
+            --muted-foreground: 215 16% 47%;
+            --accent: 210 40% 95%;
+            --border: 214 32% 91%;
+            --success: 142 76% 36%;
+            --warning: 38 92% 50%;
+            --destructive: 0 84% 60%;
+            --secondary: 210 40% 95%;
             --sidebar-width: 260px;
+        }
+       
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
         }
 
         body {
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            background-color: var(--light-color);
-            margin: 0;
-            padding: 0;
+            font-family: 'Inter', sans-serif;
+            line-height: 1.6;
+            color: hsl(var(--foreground));
+            background-color: hsl(var(--background));
         }
 
-        .sidebar {
-            background: linear-gradient(180deg, var(--dark-color) 0%, #334155 100%);
+        /* .sidebar {
+            background: linear-gradient(135deg, hsl(var(--primary)), hsl(var(--primary-hover)));
             min-height: 100vh;
             width: var(--sidebar-width);
             position: fixed;
@@ -51,102 +60,186 @@
         }
 
         .sidebar .brand h3 {
-            color: white;
+            color: hsl(var(--primary-foreground));
             margin: 0;
             font-weight: 700;
         }
 
         .sidebar .brand p {
-            color: rgba(255,255,255,0.7);
+            color: hsl(var(--primary-foreground) / 0.7);
             margin: 0;
             font-size: 0.875rem;
         }
 
         .sidebar .nav-link {
-            color: rgba(255,255,255,0.8);
+            color: hsl(var(--primary-foreground) / 0.8);
             padding: 0.75rem 1.5rem;
             border: none;
             transition: all 0.3s ease;
+            text-decoration: none;
+            display: block;
         }
 
         .sidebar .nav-link:hover,
         .sidebar .nav-link.active {
-            color: white;
+            color: hsl(var(--primary-foreground));
             background: rgba(255,255,255,0.1);
-            border-left: 3px solid var(--primary-color);
+            border-left: 3px solid hsl(var(--primary-foreground));
+        } */
+
+
+        .sidebar {
+            width: 260px;
+            height: 100vh;
+            background: var(--card-bg);
+            border-right: 1px solid var(--border);
+            position: fixed;
+            left: 0;
+            top: 0;
+            overflow-y: auto;
+            box-shadow: 2px 0 10px rgba(0,0,0,0.05);
+        }
+
+        .sidebar-header {
+            padding: 20px;
+            border-bottom: 1px solid var(--border);
+        }
+
+        .logo {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .logo-icon {
+            width: 32px;
+            height: 32px;
+            background: linear-gradient(135deg, var(--primary-light), var(--primary));
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+        }
+
+        .logo-text h2 {
+            font-size: 18px;
+            font-weight: 700;
+            margin: 0;
+            color: var(--text-primary);
+        }
+
+        .logo-text p {
+            font-size: 12px;
+            color: var(--text-secondary);
+            margin: 0;
+        }
+
+        .sidebar-nav {
+            padding: 20px 0;
+        }
+
+        .nav-item {
+            margin: 4px 16px;
+        }
+
+        .nav-link {
+            display: flex;
+            align-items: center;
+            padding: 12px 16px;
+            color: var(--text-secondary);
+            text-decoration: none;
+            border-radius: 8px;
+            transition: all 0.2s ease;
+            gap: 12px;
+        }
+
+        .nav-link:hover, .nav-link.active {
+            background: #f1f5f9;
+            color: var(--primary);
+            text-decoration: none;
+        }
+
+        .nav-link.active {
+            background: var(--primary);
+            color: white;
+            font-weight: 500;
         }
 
         .main-content {
             margin-left: var(--sidebar-width);
             padding: 2rem;
             min-height: 100vh;
+            background-color: hsl(var(--accent) / 0.3);
         }
 
         .page-header {
-            background: white;
+            background: hsl(var(--card));
             padding: 2rem;
             border-radius: 12px;
-            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            box-shadow: 0 2px 8px rgba(0,0,0,0.04);
             margin-bottom: 2rem;
-            border-left: 4px solid var(--primary-color);
+            border-left: 4px solid hsl(var(--primary));
+            border: 1px solid hsl(var(--border));
         }
 
         .card {
-            border: none;
+            background: hsl(var(--card));
+            border: 1px solid hsl(var(--border));
             border-radius: 12px;
-            box-shadow: 0 2px 10px rgba(0,0,0,0.08);
-            transition: transform 0.2s ease, box-shadow 0.2s ease;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.04);
+            transition: all 0.3s ease;
             margin-bottom: 2rem;
         }
 
         .card:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 4px 20px rgba(0,0,0,0.12);
+            transform: translateY(-4px);
+            box-shadow: 0 8px 25px rgba(0,0,0,0.1);
         }
 
         .card-header {
-            background: var(--primary-color);
-            color: white;
+            background: hsl(var(--primary));
+            color: hsl(var(--primary-foreground));
             border-radius: 12px 12px 0 0 !important;
             padding: 1rem 1.5rem;
             font-weight: 600;
         }
 
         .dropzone {
-            border: 2px dashed var(--border-color);
+            border: 2px dashed hsl(var(--border));
             border-radius: 12px;
             padding: 3rem;
             text-align: center;
             transition: all 0.3s ease;
             cursor: pointer;
-            background: var(--light-color);
+            background: hsl(var(--muted));
         }
 
         .dropzone:hover,
         .dropzone.dragover {
-            border-color: var(--primary-color);
-            background: rgba(37, 99, 235, 0.05);
+            border-color: hsl(var(--primary));
+            background: hsl(var(--primary) / 0.05);
         }
 
         .dropzone.file-uploaded {
-            border-color: var(--success-color);
-            background: rgba(16, 185, 129, 0.05);
+            border-color: hsl(var(--success));
+            background: hsl(var(--success) / 0.05);
         }
 
         .attachment-item {
             display: flex;
             align-items: center;
             padding: 0.75rem;
-            border: 1px solid var(--border-color);
+            border: 1px solid hsl(var(--border));
             border-radius: 8px;
             margin-bottom: 0.5rem;
-            background: white;
+            background: hsl(var(--card));
             transition: all 0.2s ease;
         }
 
         .attachment-item:hover {
-            background: var(--light-color);
-            border-color: var(--primary-color);
+            background: hsl(var(--muted));
+            border-color: hsl(var(--primary));
         }
 
         .file-icon {
@@ -161,22 +254,23 @@
             font-size: 1.2rem;
         }
 
-        .file-icon.pdf { background: #dc3545; }
-        .file-icon.docx { background: #0d6efd; }
-        .file-icon.xlsx { background: #198754; }
-        .file-icon.img { background: #fd7e14; }
+        .file-icon.pdf { background: hsl(var(--destructive)); }
+        .file-icon.docx { background: hsl(var(--primary)); }
+        .file-icon.xlsx { background: hsl(var(--success)); }
+        .file-icon.img { background: hsl(var(--warning)); }
 
         .insight-card {
             text-align: center;
             padding: 1.5rem;
             border-radius: 12px;
-            background: white;
-            border-left: 4px solid var(--primary-color);
+            background: hsl(var(--card));
+            border-left: 4px solid hsl(var(--primary));
+            border: 1px solid hsl(var(--border));
         }
 
-        .insight-card.fraud { border-left-color: var(--danger-color); }
-        .insight-card.sentiment { border-left-color: var(--success-color); }
-        .insight-card.keywords { border-left-color: var(--warning-color); }
+        .insight-card.fraud { border-left-color: hsl(var(--destructive)); }
+        .insight-card.sentiment { border-left-color: hsl(var(--success)); }
+        .insight-card.keywords { border-left-color: hsl(var(--warning)); }
 
         .insight-value {
             font-size: 2rem;
@@ -193,14 +287,14 @@
 
         .metadata-item {
             padding: 1rem;
-            background: var(--light-color);
+            background: hsl(var(--muted));
             border-radius: 8px;
-            border-left: 3px solid var(--primary-color);
+            border-left: 3px solid hsl(var(--primary));
         }
 
         .metadata-label {
             font-weight: 600;
-            color: var(--secondary-color);
+            color: hsl(var(--muted-foreground));
             font-size: 0.875rem;
             text-transform: uppercase;
             letter-spacing: 0.5px;
@@ -208,15 +302,15 @@
 
         .metadata-value {
             font-size: 1rem;
-            color: var(--dark-color);
+            color: hsl(var(--foreground));
             margin-top: 0.25rem;
         }
 
         .email-body {
-            background: white;
+            background: hsl(var(--card));
             padding: 1.5rem;
             border-radius: 8px;
-            border: 1px solid var(--border-color);
+            border: 1px solid hsl(var(--border));
             max-height: 400px;
             overflow-y: auto;
             line-height: 1.6;
@@ -229,10 +323,11 @@
         }
 
         .media-item {
-            background: white;
+            background: hsl(var(--card));
+            border: 1px solid hsl(var(--border));
             border-radius: 8px;
             overflow: hidden;
-            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+            box-shadow: 0 2px 8px rgba(0,0,0,0.04);
             transition: transform 0.2s ease;
         }
 
@@ -270,30 +365,35 @@
         }
 
         .status-success {
-            background: rgba(16, 185, 129, 0.1);
-            color: var(--success-color);
+            background: hsl(var(--success) / 0.1);
+            color: hsl(var(--success));
         }
 
         .status-warning {
-            background: rgba(245, 158, 11, 0.1);
-            color: var(--warning-color);
+            background: hsl(var(--warning) / 0.1);
+            color: hsl(var(--warning));
         }
 
         .status-danger {
-            background: rgba(239, 68, 68, 0.1);
-            color: var(--danger-color);
+            background: hsl(var(--destructive) / 0.1);
+            color: hsl(var(--destructive));
         }
+       
+        .text-primary { color: hsl(var(--primary)) !important; }
+        .text-success { color: hsl(var(--success)) !important; }
+        .text-warning { color: hsl(var(--warning)) !important; }
+        .text-muted { color: hsl(var(--muted-foreground)) !important; }
 
         @media (max-width: 768px) {
             .sidebar {
                 transform: translateX(-100%);
                 transition: transform 0.3s ease;
             }
-            
+           
             .sidebar.show {
                 transform: translateX(0);
             }
-            
+           
             .main-content {
                 margin-left: 0;
             }
@@ -302,40 +402,8 @@
 </head>
 <body>
     <!-- Sidebar Navigation -->
-    <nav class="sidebar">
-        <div class="brand">
-            <h3><i class="fas fa-shield-alt"></i> ClaimGuard</h3>
-            <p>Insurance Platform</p>
-        </div>
-        
-        <ul class="nav flex-column">
-            <li class="nav-item">
-                <a class="nav-link" href="dashboard.html">
-                    <i class="fas fa-chart-bar"></i> Dashboard
-                </a>
-            </li>
-            <li class="nav-item">
-                <a class="nav-link" href="claims.html">
-                    <i class="fas fa-file-text"></i> Claims Management
-                </a>
-            </li>
-            <li class="nav-item">
-                <a class="nav-link" href="fraud.html">
-                    <i class="fas fa-shield-alt"></i> Fraud Detection
-                </a>
-            </li>
-            <li class="nav-item">
-                <a class="nav-link active" href="message-analysis.html">
-                    <i class="fas fa-envelope-open-text"></i> Message Analysis
-                </a>
-            </li>
-            <li class="nav-item">
-                <a class="nav-link" href="map.html">
-                    <i class="fas fa-map"></i> Regional Analysis
-                </a>
-            </li>
-        </ul>
-    </nav>
+    
+    {% include 'sidebar.html' %}
 
     <!-- Main Content -->
     <div class="main-content">
@@ -608,6 +676,8 @@
         </div>
     </div>
 
+    {% include 'chatbox.html' %}
+
     <!-- Scripts -->
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
@@ -619,39 +689,18 @@
         let markers = [];
         let fraudChart, keywordChart;
 
-        // File upload functionality
-        document.addEventListener('DOMContentLoaded', function() {
-            const dropzone = document.getElementById('dropzone');
-            const fileInput = document.getElementById('fileInput');
-            const uploadStatus = document.getElementById('uploadStatus');
+        function simulateFileUpload(file) {
+        const formData = new FormData();
+        formData.append("file", file);
+        formData.append("user_id", "user123"); // Or dynamically set
 
-            dropzone.addEventListener('click', () => fileInput.click());
-            dropzone.addEventListener('dragover', handleDragOver);
-            dropzone.addEventListener('drop', handleFileDrop);
-            fileInput.addEventListener('change', handleFileSelect);
-
-            function handleDragOver(e) {
-                e.preventDefault();
-                dropzone.classList.add('dragover');
-            }
-
-            function handleFileDrop(e) {
-                e.preventDefault();
-                dropzone.classList.remove('dragover');
-                const files = e.dataTransfer.files;
-                if (files.length > 0) {
-                    simulateFileUpload(files[0]);
-                }
-            }
-
-            function handleFileSelect(e) {
-                const files = e.target.files;
-                if (files.length > 0) {
-                    simulateFileUpload(files[0]);
-                }
-            }
-
-            function simulateFileUpload(file) {
+        fetch("/upload_msg/", {
+            method: "POST",
+            body: formData,
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.status === "success") {
                 dropzone.classList.add('file-uploaded');
                 dropzone.innerHTML = `
                     <i class="fas fa-check-circle fa-3x text-success mb-3"></i>
@@ -661,20 +710,25 @@
 
                 setTimeout(() => {
                     uploadStatus.style.display = 'block';
-                    document.getElementById('fileName').textContent = file.name || 'claim_correspondence.msg';
+                    document.getElementById('fileName').textContent = file.name;
                     showAllSections();
+
+                    // Here you can display extracted metadata (subject, sender, etc.)
+                    console.log("Extracted metadata:", data.metadata);
+
                     initializeCharts();
                     initializeMap();
                 }, 2000);
+            } else {
+                alert("Upload failed: " + data.message);
             }
-
-            function showAllSections() {
-                const sections = ['messageContent', 'attachmentsSection', 'extractedMedia', 'analysisSection', 'mapSection'];
-                sections.forEach(id => {
-                    document.getElementById(id).style.display = 'block';
-                });
-            }
+        })
+        .catch(err => {
+            console.error("Upload error:", err);
+            alert("Something went wrong while uploading.");
         });
+    }
+
 
         // Initialize Charts
         function initializeCharts() {
