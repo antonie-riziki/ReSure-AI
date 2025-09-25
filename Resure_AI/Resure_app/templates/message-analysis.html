@@ -1,0 +1,812 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Message Analysis - ClaimGuard Pro</title>
+    
+    <!-- Bootstrap 5 CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <!-- FontAwesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- Leaflet CSS -->
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+    
+    <style>
+        :root {
+            --primary-color: #2563eb;
+            --primary-light: #60a5fa;
+            --primary-dark: #1d4ed8;
+            --secondary-color: #64748b;
+            --success-color: #10b981;
+            --warning-color: #f59e0b;
+            --danger-color: #ef4444;
+            --dark-color: #1e293b;
+            --light-color: #f8fafc;
+            --border-color: #e2e8f0;
+            --sidebar-width: 260px;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: var(--light-color);
+            margin: 0;
+            padding: 0;
+        }
+
+        .sidebar {
+            background: linear-gradient(180deg, var(--dark-color) 0%, #334155 100%);
+            min-height: 100vh;
+            width: var(--sidebar-width);
+            position: fixed;
+            left: 0;
+            top: 0;
+            z-index: 1000;
+            box-shadow: 2px 0 10px rgba(0,0,0,0.1);
+        }
+
+        .sidebar .brand {
+            padding: 1.5rem;
+            border-bottom: 1px solid rgba(255,255,255,0.1);
+        }
+
+        .sidebar .brand h3 {
+            color: white;
+            margin: 0;
+            font-weight: 700;
+        }
+
+        .sidebar .brand p {
+            color: rgba(255,255,255,0.7);
+            margin: 0;
+            font-size: 0.875rem;
+        }
+
+        .sidebar .nav-link {
+            color: rgba(255,255,255,0.8);
+            padding: 0.75rem 1.5rem;
+            border: none;
+            transition: all 0.3s ease;
+        }
+
+        .sidebar .nav-link:hover,
+        .sidebar .nav-link.active {
+            color: white;
+            background: rgba(255,255,255,0.1);
+            border-left: 3px solid var(--primary-color);
+        }
+
+        .main-content {
+            margin-left: var(--sidebar-width);
+            padding: 2rem;
+            min-height: 100vh;
+        }
+
+        .page-header {
+            background: white;
+            padding: 2rem;
+            border-radius: 12px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            margin-bottom: 2rem;
+            border-left: 4px solid var(--primary-color);
+        }
+
+        .card {
+            border: none;
+            border-radius: 12px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.08);
+            transition: transform 0.2s ease, box-shadow 0.2s ease;
+            margin-bottom: 2rem;
+        }
+
+        .card:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 20px rgba(0,0,0,0.12);
+        }
+
+        .card-header {
+            background: var(--primary-color);
+            color: white;
+            border-radius: 12px 12px 0 0 !important;
+            padding: 1rem 1.5rem;
+            font-weight: 600;
+        }
+
+        .dropzone {
+            border: 2px dashed var(--border-color);
+            border-radius: 12px;
+            padding: 3rem;
+            text-align: center;
+            transition: all 0.3s ease;
+            cursor: pointer;
+            background: var(--light-color);
+        }
+
+        .dropzone:hover,
+        .dropzone.dragover {
+            border-color: var(--primary-color);
+            background: rgba(37, 99, 235, 0.05);
+        }
+
+        .dropzone.file-uploaded {
+            border-color: var(--success-color);
+            background: rgba(16, 185, 129, 0.05);
+        }
+
+        .attachment-item {
+            display: flex;
+            align-items: center;
+            padding: 0.75rem;
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            margin-bottom: 0.5rem;
+            background: white;
+            transition: all 0.2s ease;
+        }
+
+        .attachment-item:hover {
+            background: var(--light-color);
+            border-color: var(--primary-color);
+        }
+
+        .file-icon {
+            width: 40px;
+            height: 40px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 8px;
+            margin-right: 1rem;
+            color: white;
+            font-size: 1.2rem;
+        }
+
+        .file-icon.pdf { background: #dc3545; }
+        .file-icon.docx { background: #0d6efd; }
+        .file-icon.xlsx { background: #198754; }
+        .file-icon.img { background: #fd7e14; }
+
+        .insight-card {
+            text-align: center;
+            padding: 1.5rem;
+            border-radius: 12px;
+            background: white;
+            border-left: 4px solid var(--primary-color);
+        }
+
+        .insight-card.fraud { border-left-color: var(--danger-color); }
+        .insight-card.sentiment { border-left-color: var(--success-color); }
+        .insight-card.keywords { border-left-color: var(--warning-color); }
+
+        .insight-value {
+            font-size: 2rem;
+            font-weight: 700;
+            margin: 0.5rem 0;
+        }
+
+        .metadata-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 1rem;
+            margin-bottom: 1rem;
+        }
+
+        .metadata-item {
+            padding: 1rem;
+            background: var(--light-color);
+            border-radius: 8px;
+            border-left: 3px solid var(--primary-color);
+        }
+
+        .metadata-label {
+            font-weight: 600;
+            color: var(--secondary-color);
+            font-size: 0.875rem;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .metadata-value {
+            font-size: 1rem;
+            color: var(--dark-color);
+            margin-top: 0.25rem;
+        }
+
+        .email-body {
+            background: white;
+            padding: 1.5rem;
+            border-radius: 8px;
+            border: 1px solid var(--border-color);
+            max-height: 400px;
+            overflow-y: auto;
+            line-height: 1.6;
+        }
+
+        .media-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+            gap: 1rem;
+        }
+
+        .media-item {
+            background: white;
+            border-radius: 8px;
+            overflow: hidden;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+            transition: transform 0.2s ease;
+        }
+
+        .media-item:hover {
+            transform: scale(1.02);
+        }
+
+        .media-item img {
+            width: 100%;
+            height: 150px;
+            object-fit: cover;
+        }
+
+        .media-info {
+            padding: 1rem;
+        }
+
+        #map {
+            height: 400px;
+            border-radius: 8px;
+            overflow: hidden;
+        }
+
+        .chart-container {
+            position: relative;
+            height: 300px;
+            margin: 1rem 0;
+        }
+
+        .status-badge {
+            padding: 0.25rem 0.75rem;
+            border-radius: 20px;
+            font-size: 0.875rem;
+            font-weight: 600;
+        }
+
+        .status-success {
+            background: rgba(16, 185, 129, 0.1);
+            color: var(--success-color);
+        }
+
+        .status-warning {
+            background: rgba(245, 158, 11, 0.1);
+            color: var(--warning-color);
+        }
+
+        .status-danger {
+            background: rgba(239, 68, 68, 0.1);
+            color: var(--danger-color);
+        }
+
+        @media (max-width: 768px) {
+            .sidebar {
+                transform: translateX(-100%);
+                transition: transform 0.3s ease;
+            }
+            
+            .sidebar.show {
+                transform: translateX(0);
+            }
+            
+            .main-content {
+                margin-left: 0;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- Sidebar Navigation -->
+    <nav class="sidebar">
+        <div class="brand">
+            <h3><i class="fas fa-shield-alt"></i> ClaimGuard</h3>
+            <p>Insurance Platform</p>
+        </div>
+        
+        <ul class="nav flex-column">
+            <li class="nav-item">
+                <a class="nav-link" href="dashboard.html">
+                    <i class="fas fa-chart-bar"></i> Dashboard
+                </a>
+            </li>
+            <li class="nav-item">
+                <a class="nav-link" href="claims.html">
+                    <i class="fas fa-file-text"></i> Claims Management
+                </a>
+            </li>
+            <li class="nav-item">
+                <a class="nav-link" href="fraud.html">
+                    <i class="fas fa-shield-alt"></i> Fraud Detection
+                </a>
+            </li>
+            <li class="nav-item">
+                <a class="nav-link active" href="message-analysis.html">
+                    <i class="fas fa-envelope-open-text"></i> Message Analysis
+                </a>
+            </li>
+            <li class="nav-item">
+                <a class="nav-link" href="map.html">
+                    <i class="fas fa-map"></i> Regional Analysis
+                </a>
+            </li>
+        </ul>
+    </nav>
+
+    <!-- Main Content -->
+    <div class="main-content">
+        <!-- Page Header -->
+        <div class="page-header">
+            <h1><i class="fas fa-envelope-open-text text-primary"></i> Message Analysis</h1>
+            <p class="text-muted mb-0">Analyze email messages for claims processing and fraud detection</p>
+        </div>
+
+        <!-- File Upload Section -->
+        <div class="card">
+            <div class="card-header">
+                <i class="fas fa-upload"></i> File Upload
+            </div>
+            <div class="card-body">
+                <div class="dropzone" id="dropzone">
+                    <i class="fas fa-cloud-upload-alt fa-3x text-primary mb-3"></i>
+                    <h5>Drop .msg files here or click to browse</h5>
+                    <p class="text-muted">Supported formats: .msg, .eml</p>
+                    <input type="file" id="fileInput" accept=".msg,.eml" style="display: none;">
+                </div>
+                <div id="uploadStatus" class="mt-3" style="display: none;">
+                    <div class="d-flex align-items-center">
+                        <i class="fas fa-file-alt fa-2x text-success me-3"></i>
+                        <div>
+                            <h6 class="mb-0" id="fileName">claim_correspondence.msg</h6>
+                            <small class="text-muted">Uploaded successfully • Processing complete</small>
+                        </div>
+                        <span class="status-badge status-success ms-auto">Processed</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Message Content & Metadata Section -->
+        <div class="card" id="messageContent" style="display: none;">
+            <div class="card-header">
+                <i class="fas fa-info-circle"></i> Message Content & Metadata
+            </div>
+            <div class="card-body">
+                <div class="metadata-grid">
+                    <div class="metadata-item">
+                        <div class="metadata-label">From</div>
+                        <div class="metadata-value">john.claimant@email.com</div>
+                    </div>
+                    <div class="metadata-item">
+                        <div class="metadata-label">To</div>
+                        <div class="metadata-value">claims@insuranceco.com</div>
+                    </div>
+                    <div class="metadata-item">
+                        <div class="metadata-label">Date</div>
+                        <div class="metadata-value">March 15, 2024, 2:30 PM</div>
+                    </div>
+                    <div class="metadata-item">
+                        <div class="metadata-label">Subject</div>
+                        <div class="metadata-value">Re: Auto Accident Claim #CLM-2024-0315</div>
+                    </div>
+                </div>
+                
+                <h6 class="mt-4 mb-3">Message Body</h6>
+                <div class="email-body">
+                    <p>Dear Claims Department,</p>
+                    <p>I am writing to provide additional information regarding my auto accident claim #CLM-2024-0315. The incident occurred on March 10, 2024, at approximately 3:45 PM at the intersection of Main Street and Oak Avenue.</p>
+                    <p>As discussed in our previous correspondence, I have attached the following documents:</p>
+                    <ul>
+                        <li>Police report from the incident</li>
+                        <li>Photos of vehicle damage</li>
+                        <li>Medical reports from emergency room visit</li>
+                        <li>Repair estimate from certified mechanic</li>
+                    </ul>
+                    <p>The other driver ran a red light and collided with the passenger side of my vehicle. I sustained minor injuries including whiplash and was treated at City General Hospital. My vehicle sustained significant damage to the front passenger door and rear quarter panel.</p>
+                    <p>Please let me know if you need any additional information to process my claim. I can be reached at (555) 123-4567 or john.claimant@email.com.</p>
+                    <p>Thank you for your prompt attention to this matter.</p>
+                    <p>Sincerely,<br>John Claimant</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Attachments Section -->
+        <div class="card" id="attachmentsSection" style="display: none;">
+            <div class="card-header">
+                <i class="fas fa-paperclip"></i> Attachments (4)
+            </div>
+            <div class="card-body">
+                <div class="attachment-item">
+                    <div class="file-icon pdf">
+                        <i class="fas fa-file-pdf"></i>
+                    </div>
+                    <div class="flex-grow-1">
+                        <h6 class="mb-1">Police_Report_CLM2024-0315.pdf</h6>
+                        <small class="text-muted">2.3 MB • PDF Document</small>
+                    </div>
+                    <button class="btn btn-outline-primary btn-sm">
+                        <i class="fas fa-download"></i> Download
+                    </button>
+                </div>
+                
+                <div class="attachment-item">
+                    <div class="file-icon docx">
+                        <i class="fas fa-file-word"></i>
+                    </div>
+                    <div class="flex-grow-1">
+                        <h6 class="mb-1">Medical_Report_Emergency_Visit.docx</h6>
+                        <small class="text-muted">1.8 MB • Word Document</small>
+                    </div>
+                    <button class="btn btn-outline-primary btn-sm">
+                        <i class="fas fa-download"></i> Download
+                    </button>
+                </div>
+                
+                <div class="attachment-item">
+                    <div class="file-icon xlsx">
+                        <i class="fas fa-file-excel"></i>
+                    </div>
+                    <div class="flex-grow-1">
+                        <h6 class="mb-1">Repair_Estimate_Breakdown.xlsx</h6>
+                        <small class="text-muted">456 KB • Excel Spreadsheet</small>
+                    </div>
+                    <button class="btn btn-outline-primary btn-sm">
+                        <i class="fas fa-download"></i> Download
+                    </button>
+                </div>
+                
+                <div class="attachment-item">
+                    <div class="file-icon img">
+                        <i class="fas fa-file-image"></i>
+                    </div>
+                    <div class="flex-grow-1">
+                        <h6 class="mb-1">Vehicle_Damage_Photos.zip</h6>
+                        <small class="text-muted">12.4 MB • Image Archive</small>
+                    </div>
+                    <button class="btn btn-outline-primary btn-sm">
+                        <i class="fas fa-download"></i> Download
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Extracted Media Section -->
+        <div class="card" id="extractedMedia" style="display: none;">
+            <div class="card-header">
+                <i class="fas fa-images"></i> Extracted Media & Documents
+            </div>
+            <div class="card-body">
+                <div class="media-grid">
+                    <div class="media-item">
+                        <img src="https://via.placeholder.com/200x150/e3f2fd/1976d2?text=Vehicle+Damage" alt="Vehicle Damage">
+                        <div class="media-info">
+                            <h6>Vehicle Damage - Front</h6>
+                            <small class="text-muted">Extracted from attachment</small>
+                        </div>
+                    </div>
+                    
+                    <div class="media-item">
+                        <img src="https://via.placeholder.com/200x150/f3e5f5/7b1fa2?text=Police+Report" alt="Police Report">
+                        <div class="media-info">
+                            <h6>Police Report Scan</h6>
+                            <small class="text-muted">OCR processed</small>
+                        </div>
+                    </div>
+                    
+                    <div class="media-item">
+                        <img src="https://via.placeholder.com/200x150/e8f5e8/388e3c?text=Medical+Chart" alt="Medical Chart">
+                        <div class="media-info">
+                            <h6>Medical Assessment</h6>
+                            <small class="text-muted">Table extracted</small>
+                        </div>
+                    </div>
+                    
+                    <div class="media-item">
+                        <img src="https://via.placeholder.com/200x150/fff3e0/f57c00?text=Repair+Estimate" alt="Repair Estimate">
+                        <div class="media-info">
+                            <h6>Repair Cost Breakdown</h6>
+                            <small class="text-muted">Spreadsheet data</small>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Analysis & Insights Section -->
+        <div class="card" id="analysisSection" style="display: none;">
+            <div class="card-header">
+                <i class="fas fa-brain"></i> Analysis & Insights
+            </div>
+            <div class="card-body">
+                <div class="row mb-4">
+                    <div class="col-md-4">
+                        <div class="insight-card fraud">
+                            <i class="fas fa-shield-alt fa-2x text-danger mb-2"></i>
+                            <div class="insight-value text-danger">Low Risk</div>
+                            <p class="mb-0">Fraud Probability: 15%</p>
+                        </div>
+                    </div>
+                    <div class="col-md-4">
+                        <div class="insight-card sentiment">
+                            <i class="fas fa-heart fa-2x text-success mb-2"></i>
+                            <div class="insight-value text-success">Positive</div>
+                            <p class="mb-0">Sentiment Score: 0.72</p>
+                        </div>
+                    </div>
+                    <div class="col-md-4">
+                        <div class="insight-card keywords">
+                            <i class="fas fa-tags fa-2x text-warning mb-2"></i>
+                            <div class="insight-value text-warning">12</div>
+                            <p class="mb-0">Key Terms Detected</p>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="row">
+                    <div class="col-md-6">
+                        <h6>Fraud Risk Analysis</h6>
+                        <div class="chart-container">
+                            <canvas id="fraudChart"></canvas>
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <h6>Keyword Frequency</h6>
+                        <div class="chart-container">
+                            <canvas id="keywordChart"></canvas>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Geographical Map Section -->
+        <div class="card" id="mapSection" style="display: none;">
+            <div class="card-header">
+                <i class="fas fa-map-marker-alt"></i> Geographical Analysis
+            </div>
+            <div class="card-body">
+                <div class="row mb-3">
+                    <div class="col-md-8">
+                        <p class="text-muted mb-0">Locations mentioned in the message and attachments</p>
+                    </div>
+                    <div class="col-md-4">
+                        <div class="btn-group" role="group">
+                            <button type="button" class="btn btn-outline-primary btn-sm active" onclick="filterMarkers('all')">All</button>
+                            <button type="button" class="btn btn-outline-primary btn-sm" onclick="filterMarkers('incident')">Incident</button>
+                            <button type="button" class="btn btn-outline-primary btn-sm" onclick="filterMarkers('medical')">Medical</button>
+                        </div>
+                    </div>
+                </div>
+                <div id="map"></div>
+                <div class="mt-3">
+                    <div class="row">
+                        <div class="col-md-4">
+                            <div class="d-flex align-items-center">
+                                <div class="bg-danger rounded-circle me-2" style="width: 12px; height: 12px;"></div>
+                                <small>Incident Location</small>
+                            </div>
+                        </div>
+                        <div class="col-md-4">
+                            <div class="d-flex align-items-center">
+                                <div class="bg-primary rounded-circle me-2" style="width: 12px; height: 12px;"></div>
+                                <small>Medical Facility</small>
+                            </div>
+                        </div>
+                        <div class="col-md-4">
+                            <div class="d-flex align-items-center">
+                                <div class="bg-success rounded-circle me-2" style="width: 12px; height: 12px;"></div>
+                                <small>Repair Shop</small>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Scripts -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+
+    <script>
+        // Global variables
+        let map;
+        let markers = [];
+        let fraudChart, keywordChart;
+
+        // File upload functionality
+        document.addEventListener('DOMContentLoaded', function() {
+            const dropzone = document.getElementById('dropzone');
+            const fileInput = document.getElementById('fileInput');
+            const uploadStatus = document.getElementById('uploadStatus');
+
+            dropzone.addEventListener('click', () => fileInput.click());
+            dropzone.addEventListener('dragover', handleDragOver);
+            dropzone.addEventListener('drop', handleFileDrop);
+            fileInput.addEventListener('change', handleFileSelect);
+
+            function handleDragOver(e) {
+                e.preventDefault();
+                dropzone.classList.add('dragover');
+            }
+
+            function handleFileDrop(e) {
+                e.preventDefault();
+                dropzone.classList.remove('dragover');
+                const files = e.dataTransfer.files;
+                if (files.length > 0) {
+                    simulateFileUpload(files[0]);
+                }
+            }
+
+            function handleFileSelect(e) {
+                const files = e.target.files;
+                if (files.length > 0) {
+                    simulateFileUpload(files[0]);
+                }
+            }
+
+            function simulateFileUpload(file) {
+                dropzone.classList.add('file-uploaded');
+                dropzone.innerHTML = `
+                    <i class="fas fa-check-circle fa-3x text-success mb-3"></i>
+                    <h5>File uploaded successfully!</h5>
+                    <p class="text-muted">Processing message content...</p>
+                `;
+
+                setTimeout(() => {
+                    uploadStatus.style.display = 'block';
+                    document.getElementById('fileName').textContent = file.name || 'claim_correspondence.msg';
+                    showAllSections();
+                    initializeCharts();
+                    initializeMap();
+                }, 2000);
+            }
+
+            function showAllSections() {
+                const sections = ['messageContent', 'attachmentsSection', 'extractedMedia', 'analysisSection', 'mapSection'];
+                sections.forEach(id => {
+                    document.getElementById(id).style.display = 'block';
+                });
+            }
+        });
+
+        // Initialize Charts
+        function initializeCharts() {
+            // Fraud Risk Chart
+            const fraudCtx = document.getElementById('fraudChart').getContext('2d');
+            fraudChart = new Chart(fraudCtx, {
+                type: 'doughnut',
+                data: {
+                    labels: ['Low Risk', 'Medium Risk', 'High Risk'],
+                    datasets: [{
+                        data: [85, 10, 5],
+                        backgroundColor: ['#10b981', '#f59e0b', '#ef4444'],
+                        borderWidth: 0
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: {
+                            position: 'bottom'
+                        }
+                    }
+                }
+            });
+
+            // Keyword Frequency Chart
+            const keywordCtx = document.getElementById('keywordChart').getContext('2d');
+            keywordChart = new Chart(keywordCtx, {
+                type: 'bar',
+                data: {
+                    labels: ['Accident', 'Damage', 'Medical', 'Police', 'Insurance'],
+                    datasets: [{
+                        label: 'Frequency',
+                        data: [8, 6, 4, 3, 5],
+                        backgroundColor: '#2563eb',
+                        borderRadius: 4
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: {
+                            display: false
+                        }
+                    },
+                    scales: {
+                        y: {
+                            beginAtZero: true
+                        }
+                    }
+                }
+            });
+        }
+
+        // Initialize Map
+        function initializeMap() {
+            map = L.map('map').setView([40.7128, -74.0060], 12);
+
+            L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+                attribution: '© OpenStreetMap contributors'
+            }).addTo(map);
+
+            // Sample locations
+            const locations = [
+                {
+                    coords: [40.7128, -74.0060],
+                    type: 'incident',
+                    title: 'Accident Location',
+                    description: 'Main Street & Oak Avenue intersection',
+                    color: 'red'
+                },
+                {
+                    coords: [40.7200, -74.0100],
+                    type: 'medical',
+                    title: 'City General Hospital',
+                    description: 'Emergency room treatment location',
+                    color: 'blue'
+                },
+                {
+                    coords: [40.7050, -74.0150],
+                    type: 'repair',
+                    title: 'AutoFix Repair Shop',
+                    description: 'Vehicle damage assessment location',
+                    color: 'green'
+                }
+            ];
+
+            locations.forEach(location => {
+                const marker = L.marker(location.coords)
+                    .addTo(map)
+                    .bindPopup(`<b>${location.title}</b><br>${location.description}`);
+                
+                marker.options.type = location.type;
+                markers.push(marker);
+            });
+        }
+
+        // Filter map markers
+        function filterMarkers(type) {
+            // Update button states
+            document.querySelectorAll('.btn-group .btn').forEach(btn => {
+                btn.classList.remove('active');
+            });
+            event.target.classList.add('active');
+
+            // Filter markers
+            markers.forEach(marker => {
+                if (type === 'all' || marker.options.type === type) {
+                    marker.addTo(map);
+                } else {
+                    map.removeLayer(marker);
+                }
+            });
+        }
+
+        // Auto-trigger file upload simulation on page load for demo
+        setTimeout(() => {
+            const fakeFile = new File([''], 'claim_correspondence.msg', { type: 'application/octet-stream' });
+            document.getElementById('dropzone').click();
+            
+            setTimeout(() => {
+                const event = new Event('change');
+                const fileInput = document.getElementById('fileInput');
+                Object.defineProperty(event, 'target', {
+                    writable: false,
+                    value: { files: [fakeFile] }
+                });
+                fileInput.dispatchEvent(event);
+            }, 1000);
+        }, 3000);
+    </script>
+</body>
+</html>
