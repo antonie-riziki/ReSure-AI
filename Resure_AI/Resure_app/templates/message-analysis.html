@@ -494,62 +494,13 @@
         <!-- Attachments Section -->
         <div class="card" id="attachmentsSection" style="display: none;">
             <div class="card-header">
-                <i class="fas fa-paperclip"></i> Attachments (4)
+                <i class="fas fa-paperclip"></i> Attachments
             </div>
-            <div class="card-body">
-                <div class="attachment-item">
-                    <div class="file-icon pdf">
-                        <i class="fas fa-file-pdf"></i>
-                    </div>
-                    <div class="flex-grow-1">
-                        <h6 class="mb-1">Police_Report_CLM2024-0315.pdf</h6>
-                        <small class="text-muted">2.3 MB • PDF Document</small>
-                    </div>
-                    <button class="btn btn-outline-primary btn-sm">
-                        <i class="fas fa-download"></i> Download
-                    </button>
-                </div>
-                
-                <div class="attachment-item">
-                    <div class="file-icon docx">
-                        <i class="fas fa-file-word"></i>
-                    </div>
-                    <div class="flex-grow-1">
-                        <h6 class="mb-1">Medical_Report_Emergency_Visit.docx</h6>
-                        <small class="text-muted">1.8 MB • Word Document</small>
-                    </div>
-                    <button class="btn btn-outline-primary btn-sm">
-                        <i class="fas fa-download"></i> Download
-                    </button>
-                </div>
-                
-                <div class="attachment-item">
-                    <div class="file-icon xlsx">
-                        <i class="fas fa-file-excel"></i>
-                    </div>
-                    <div class="flex-grow-1">
-                        <h6 class="mb-1">Repair_Estimate_Breakdown.xlsx</h6>
-                        <small class="text-muted">456 KB • Excel Spreadsheet</small>
-                    </div>
-                    <button class="btn btn-outline-primary btn-sm">
-                        <i class="fas fa-download"></i> Download
-                    </button>
-                </div>
-                
-                <div class="attachment-item">
-                    <div class="file-icon img">
-                        <i class="fas fa-file-image"></i>
-                    </div>
-                    <div class="flex-grow-1">
-                        <h6 class="mb-1">Vehicle_Damage_Photos.zip</h6>
-                        <small class="text-muted">12.4 MB • Image Archive</small>
-                    </div>
-                    <button class="btn btn-outline-primary btn-sm">
-                        <i class="fas fa-download"></i> Download
-                    </button>
-                </div>
+            <div class="card-body" id="attachmentsList">
+                <!-- Files will be inserted here dynamically -->
             </div>
         </div>
+
 
         <!-- Extracted Media Section -->
         <div class="card" id="extractedMedia" style="display: none;">
@@ -801,6 +752,48 @@
                     alert("Something went wrong while uploading.");
                 });
         }
+
+        // Donwload attachements Logic
+        function loadAttachments(userId = "user123") {
+            fetch(`/list_attachments/?user_id=${userId}`)
+                .then(res => res.json())
+                .then(data => {
+                    if (data.status === "success") {
+                        const listContainer = document.getElementById("attachmentsList");
+                        listContainer.innerHTML = ""; // clear old
+
+                        data.files.forEach(file => {
+                            let iconClass = "fas fa-file";
+                            if (file.ext === "pdf") iconClass = "fas fa-file-pdf text-danger";
+                            else if (file.ext === "docx") iconClass = "fas fa-file-word text-primary";
+                            else if (file.ext === "xlsx" || file.ext === "csv") iconClass = "fas fa-file-excel text-success";
+                            else if (["png", "jpg", "jpeg", "gif"].includes(file.ext)) iconClass = "fas fa-file-image text-warning";
+                            else if (file.ext === "zip") iconClass = "fas fa-file-archive text-secondary";
+
+                            const item = `
+                                <div class="attachment-item d-flex align-items-center mb-2">
+                                    <div class="file-icon me-3"><i class="${iconClass} fa-2x"></i></div>
+                                    <div class="flex-grow-1">
+                                        <h6 class="mb-1">${file.name}</h6>
+                                        <small class="text-muted">${file.size} • ${file.ext.toUpperCase()} Document</small>
+                                    </div>
+                                    <a href="${file.url}" class="btn btn-outline-primary btn-sm" download>
+                                        <i class="fas fa-download"></i> Download
+                                    </a>
+                                </div>
+                            `;
+                            listContainer.insertAdjacentHTML("beforeend", item);
+                        });
+
+                        // Show section only if files exist
+                        document.getElementById("attachmentsSection").style.display = "block";
+                    } else {
+                        console.log("No attachments:", data.message);
+                    }
+                })
+                .catch(err => console.error("Error loading attachments:", err));
+        }
+
 
         // Show all dashboard sections
         function showAllSections() {

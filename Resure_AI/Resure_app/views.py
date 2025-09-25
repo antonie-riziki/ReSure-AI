@@ -538,21 +538,67 @@ def merge_pdfs(user_id: str, base_dir: str = "users_data", output_name: str = "m
 
 
 
+# @csrf_exempt
+# def convert_attachments_to_pdf(request):
+#     if request.method == "POST":
+#         user_id = request.POST.get("user_id", "user123")
+
+#         try:
+#             convert_docx_to_pdf(user_id, base_dir="users_data")
+#             return JsonResponse({"status": "success", "message": "All DOCX files converted to PDF."}, safe=False, json_dumps_params={"default": lambda x: x.decode() if isinstance(x, bytes) else str(x)})
+#         except Exception as e:
+#             return JsonResponse({"status": "error", "message": str(e)}, safe=False, json_dumps_params={"default": lambda x: x.decode() if isinstance(x, bytes) else str(x)})
+
+#     return JsonResponse({"status": "error", "message": "Invalid request"})
+
+
+
+
+import mimetypes
+from django.http import FileResponse
+
 @csrf_exempt
-def convert_attachments_to_pdf(request):
-    if request.method == "POST":
-        user_id = request.POST.get("user_id", "user123")
+def list_attachments(request):
+    """Return all attachments for a given user as JSON"""
+    user_id = request.GET.get("user_id", "user123")  
+    attach_dir = os.path.join("users_data", user_id, "attachments")
 
-        try:
-            convert_docx_to_pdf(user_id, base_dir="users_data")
-            return JsonResponse({"status": "success", "message": "All DOCX files converted to PDF."}, safe=False, json_dumps_params={"default": lambda x: x.decode() if isinstance(x, bytes) else str(x)})
-        except Exception as e:
-            return JsonResponse({"status": "error", "message": str(e)}, safe=False, json_dumps_params={"default": lambda x: x.decode() if isinstance(x, bytes) else str(x)})
+    if not os.path.exists(attach_dir):
+        return JsonResponse({"status": "error", "message": "No attachments found"})
 
-    return JsonResponse({"status": "error", "message": "Invalid request"})
+    files = []
+    for fname in os.listdir(attach_dir):
+        fpath = os.path.join(attach_dir, fname)
+        if os.path.isfile(fpath):
+            size = round(os.path.getsize(fpath) / 1024 / 1024, 2)  # MB
+            ext = os.path.splitext(fname)[1].lower().strip(".")
+            files.append({
+                "name": fname,
+                "size": f"{size} MB",
+                "ext": ext,
+                # "url": f"/users_data/?user_id={user_id}&file={fname}"
+                "url":f"/users_data/user123/attachments"
+            })
+
+    return JsonResponse({"status": "success", "files": files})
 
 
+@csrf_exempt
+def download_attachment(request):
+    """Serve an attachment file for download"""
+    user_id = request.GET.get("user_id", "user123")
+    filename = request.GET.get("file")
 
+    attach_dir = os.path.join("users_data", user_id, "attachments")
+    file_path = os.path.join(attach_dir, filename)
+
+    if not os.path.exists(file_path):
+        return JsonResponse({"status": "error", "message": "File not found"}, status=404)
+
+    content_type, _ = mimetypes.guess_type(file_path)
+    response = FileResponse(open(file_path, "rb"), content_type=content_type)
+    response["Content-Disposition"] = f'attachment; filename="{filename}"'
+    return response
 
 
 
