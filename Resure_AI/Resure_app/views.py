@@ -8,7 +8,6 @@ from django.views.decorators.csrf import csrf_exempt
 from django.contrib import messages
 from django.shortcuts import render, redirect, get_object_or_404
 import africastalking
-import os
 import sys
 import secrets
 import string
@@ -17,11 +16,15 @@ import shutil
 import tempfile
 import google.generativeai as genai
 from dotenv import load_dotenv
-import os
 import extract_msg
 import shutil
 import uuid
 from datetime import datetime
+from django.http import JsonResponse, FileResponse
+import os, io
+import fitz 
+from PIL import Image
+import numpy as np
 
 load_dotenv()
 
@@ -360,6 +363,57 @@ def merge_pdfs(user_id: str, base_dir: str = "users_data", output_name: str = "m
 
 
 
+def extract_images_only(user_id: str, base_dir: str = "users_data", merged_file: str = "merged.pdf"):
+    """
+    Extracts relevant images from a merged PDF.
+
+    - Skips very small logos/icons (width/height < 100px).
+    - Skips nearly blank images (avg brightness > 245).
+    - Saves filtered images into the user's attachment folder.
+    
+    Returns:
+        dict: {"images": [list of saved image paths]}
+    """
+    attach_dir = os.path.join(base_dir, user_id, "attachments")
+    pdf_path = os.path.join(attach_dir, merged_file)
+
+    if not os.path.exists(pdf_path):
+        raise FileNotFoundError(f"Merged PDF not found: {pdf_path}")
+
+    results = {"images": []}
+
+    doc = fitz.open(pdf_path)
+    for page_num in range(len(doc)):
+        for img_index, img in enumerate(doc.get_page_images(page_num), start=1):
+            xref = img[0]
+            base_image = doc.extract_image(xref)
+            image_bytes = base_image["image"]
+            ext = base_image["ext"]
+
+            pil_img = Image.open(io.BytesIO(image_bytes))
+            w, h = pil_img.size
+
+            # Skip small logos/icons
+            if w < 100 or h < 100:
+                continue
+
+            # Skip nearly white/blank images
+            img_array = np.array(pil_img.convert("L"))
+            avg_brightness = img_array.mean()
+            if avg_brightness > 245:
+                continue
+
+            # Save relevant image
+            img_name = f"relevant_image_page{page_num+1}_{img_index}.{ext}"
+            img_path = os.path.join(attach_dir, img_name)
+            pil_img.save(img_path)
+            results["images"].append(img_path)
+
+    doc.close()
+
+    print(f"✅ Extracted {len(results['images'])} relevant images")
+    return results
+
 
 
 
@@ -527,6 +581,31 @@ def merge_pdfs(user_id: str, base_dir: str = "users_data", output_name: str = "m
 
 
 
+from django.http import JsonResponse, FileResponse
+
+@csrf_exempt
+def merge_user_pdfs(request):
+    """
+    API to merge all PDFs in a user's attachments folder into one PDF.
+    """
+    if request.method == "POST":
+        user_id = request.POST.get("user_id", "user123")
+
+        try:
+            merged_path = merge_pdfs(user_id)
+
+            if merged_path:
+                return JsonResponse({
+                    "status": "success",
+                    "message": "PDFs merged successfully",
+                    "file_url": f"/download_attachment/?user_id={user_id}&file={os.path.basename(merged_path)}"
+                })
+            else:
+                return JsonResponse({"status": "error", "message": "Merging failed"})
+        except Exception as e:
+            return JsonResponse({"status": "error", "message": str(e)}, status=500)
+
+    return JsonResponse({"status": "error", "message": "Invalid request"}, status=400)
 
 
 
@@ -538,69 +617,82 @@ def merge_pdfs(user_id: str, base_dir: str = "users_data", output_name: str = "m
 
 
 
-# @csrf_exempt
-# def convert_attachments_to_pdf(request):
-#     if request.method == "POST":
-#         user_id = request.POST.get("user_id", "user123")
-
-#         try:
-#             convert_docx_to_pdf(user_id, base_dir="users_data")
-#             return JsonResponse({"status": "success", "message": "All DOCX files converted to PDF."}, safe=False, json_dumps_params={"default": lambda x: x.decode() if isinstance(x, bytes) else str(x)})
-#         except Exception as e:
-#             return JsonResponse({"status": "error", "message": str(e)}, safe=False, json_dumps_params={"default": lambda x: x.decode() if isinstance(x, bytes) else str(x)})
-
-#     return JsonResponse({"status": "error", "message": "Invalid request"})
-
-
-
-
-import mimetypes
-from django.http import FileResponse
-
 @csrf_exempt
+def convert_attachments_to_pdf(request):
+    if request.method == "POST":
+        user_id = request.POST.get("user_id", "user123")
+
+        try:
+            convert_docx_to_pdf(user_id, base_dir="users_data")
+            return JsonResponse({"status": "success", "message": "All DOCX files converted to PDF."}, safe=False, json_dumps_params={"default": lambda x: x.decode() if isinstance(x, bytes) else str(x)})
+        except Exception as e:
+            return JsonResponse({"status": "error", "message": str(e)}, safe=False, json_dumps_params={"default": lambda x: x.decode() if isinstance(x, bytes) else str(x)})
+
+    return JsonResponse({"status": "error", "message": "Invalid request"})
+
+
+
+
+import os
+from django.http import JsonResponse
+
 def list_attachments(request):
-    """Return all attachments for a given user as JSON"""
-    user_id = request.GET.get("user_id", "user123")  
+    user_id = request.GET.get("user_id", "user123")
     attach_dir = os.path.join("users_data", user_id, "attachments")
 
     if not os.path.exists(attach_dir):
-        return JsonResponse({"status": "error", "message": "No attachments found"})
+        return JsonResponse({"status": "error", "message": "No attachment folder"})
 
-    files = []
-    for fname in os.listdir(attach_dir):
-        fpath = os.path.join(attach_dir, fname)
-        if os.path.isfile(fpath):
-            size = round(os.path.getsize(fpath) / 1024 / 1024, 2)  # MB
-            ext = os.path.splitext(fname)[1].lower().strip(".")
-            files.append({
-                "name": fname,
-                "size": f"{size} MB",
+    files_data = []
+    for f in os.listdir(attach_dir):
+        path = os.path.join(attach_dir, f)
+        if os.path.isfile(path):
+            size_kb = os.path.getsize(path) / 1024
+            ext = f.split(".")[-1].lower()
+            files_data.append({
+                "name": f,
                 "ext": ext,
-                # "url": f"/users_data/?user_id={user_id}&file={fname}"
-                "url":f"/users_data/user123/attachments"
+                "size": f"{size_kb:.1f} KB",
+                "url": f"/download_attachment/?user_id={user_id}&file={f}"
             })
 
-    return JsonResponse({"status": "success", "files": files})
+    if not files_data:
+        return JsonResponse({"status": "error", "message": "No files found"})
+
+    return JsonResponse({"status": "success", "files": files_data})
 
 
-@csrf_exempt
+
+
+
+from django.http import FileResponse
+
 def download_attachment(request):
-    """Serve an attachment file for download"""
     user_id = request.GET.get("user_id", "user123")
     filename = request.GET.get("file")
-
-    attach_dir = os.path.join("users_data", user_id, "attachments")
-    file_path = os.path.join(attach_dir, filename)
+    file_path = os.path.join("users_data", user_id, "attachments", filename)
 
     if not os.path.exists(file_path):
         return JsonResponse({"status": "error", "message": "File not found"}, status=404)
 
-    content_type, _ = mimetypes.guess_type(file_path)
-    response = FileResponse(open(file_path, "rb"), content_type=content_type)
-    response["Content-Disposition"] = f'attachment; filename="{filename}"'
-    return response
+    return FileResponse(open(file_path, "rb"), as_attachment=True, filename=filename)
 
 
+
+
+
+@csrf_exempt
+def extract_images_view(request):
+    if request.method == "POST":
+        user_id = request.POST.get("user_id", "user123")
+
+        try:
+            results = extract_images_only(user_id=user_id)
+            return JsonResponse({"status": "success", "images": results["images"]})
+        except Exception as e:
+            return JsonResponse({"status": "error", "message": str(e)})
+
+    return JsonResponse({"status": "error", "message": "Invalid request"})
 
 
 

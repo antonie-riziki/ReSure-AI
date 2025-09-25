@@ -28,9 +28,11 @@ urlpatterns = [
     path("map/", views.map, name="map"), 
 
     path("upload_msg/", views.upload_msg, name="upload_msg"),
-    # path("convert_attachments_to_pdf/", views.convert_attachments_to_pdf, name="convert_attachments_to_pdf"),
+    path("convert_attachments_to_pdf/", views.convert_attachments_to_pdf, name="convert_attachments_to_pdf"),
     path("list_attachments/", views.list_attachments, name="list_attachments"),
     path("download_attachment/", views.download_attachment, name="download_attachment"),
+    path("merge_user_pdfs/", views.merge_user_pdfs, name="merge_user_pdfs"),
+    path("extract_images/", views.extract_images_view, name="extract_images"),
 
 
 ]  

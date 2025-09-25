@@ -446,6 +446,19 @@
 
 
         <button id="convertBtn" class="btn btn-primary" style="margin-bottom: 20px;">Convert Attachments to PDF</button>
+        
+        <div>
+            <button class="btn btn-primary mt-3" onclick="mergePDFs()">
+                <i class="fas fa-file-merge"></i> Merge PDFs
+            </button>
+        <div id="mergeStatus" class="mt-2 text-muted"></div>
+
+        <div style="padding-bottom: 20px;">
+            <button id="extractMediaBtn" class="btn btn-primary mt-3">
+                <i class="fas fa-photo-video"></i> Extract Media Files
+            </button>
+        </div>
+
 
         <!-- Message Content & Metadata Section -->
         <div class="card" id="messageContent" style="display: none;">
@@ -456,93 +469,67 @@
                 <div class="metadata-grid">
                     <div class="metadata-item">
                         <div class="metadata-label">From</div>
-                        <div class="metadata-value">john.claimant@email.com</div>
+                        <div class="metadata-value" id="metaFrom"></div>
                     </div>
                     <div class="metadata-item">
                         <div class="metadata-label">To</div>
-                        <div class="metadata-value">claims@insuranceco.com</div>
+                        <div class="metadata-value" id="metaTo"></div>
                     </div>
                     <div class="metadata-item">
                         <div class="metadata-label">Date</div>
-                        <div class="metadata-value">March 15, 2024, 2:30 PM</div>
+                        <div class="metadata-value" id="metaDate"></div>
                     </div>
                     <div class="metadata-item">
                         <div class="metadata-label">Subject</div>
-                        <div class="metadata-value">Re: Auto Accident Claim #CLM-2024-0315</div>
+                        <div class="metadata-value" id="metaSubject"></div>
                     </div>
                 </div>
                 
                 <h6 class="mt-4 mb-3">Message Body</h6>
-                <div class="email-body">
-                    <p>Dear Claims Department,</p>
-                    <p>I am writing to provide additional information regarding my auto accident claim #CLM-2024-0315. The incident occurred on March 10, 2024, at approximately 3:45 PM at the intersection of Main Street and Oak Avenue.</p>
-                    <p>As discussed in our previous correspondence, I have attached the following documents:</p>
-                    <ul>
-                        <li>Police report from the incident</li>
-                        <li>Photos of vehicle damage</li>
-                        <li>Medical reports from emergency room visit</li>
-                        <li>Repair estimate from certified mechanic</li>
-                    </ul>
-                    <p>The other driver ran a red light and collided with the passenger side of my vehicle. I sustained minor injuries including whiplash and was treated at City General Hospital. My vehicle sustained significant damage to the front passenger door and rear quarter panel.</p>
-                    <p>Please let me know if you need any additional information to process my claim. I can be reached at (555) 123-4567 or john.claimant@email.com.</p>
-                    <p>Thank you for your prompt attention to this matter.</p>
-                    <p>Sincerely,<br>John Claimant</p>
-                </div>
+                <div class="email-body" id="metaBody"></div>
             </div>
         </div>
+
+
+        <button id="showAttachmentsBtn" class="btn btn-primary mb-3">
+            <i class="fas fa-paperclip"></i> Display Attachments
+        </button>
 
         <!-- Attachments Section -->
         <div class="card" id="attachmentsSection" style="display: none;">
             <div class="card-header">
                 <i class="fas fa-paperclip"></i> Attachments
             </div>
-            <div class="card-body" id="attachmentsList">
-                <!-- Files will be inserted here dynamically -->
+            <div class="card-body" id="attachmentsList" style="max-height: 400px; overflow-y: auto;">
+                <!-- JS will inject attachment items here -->
             </div>
         </div>
+
+
+
 
 
         <!-- Extracted Media Section -->
-        <div class="card" id="extractedMedia" style="display: none;">
-            <div class="card-header">
-                <i class="fas fa-images"></i> Extracted Media & Documents
+        <div class="card mt-4" id="imagesSection" style="display: none;">
+            <div class="card-header d-flex justify-content-between align-items-center">
+                <span><i class="fas fa-images"></i> Extracted Images</span>
+                <div>
+                    <button class="btn btn-outline-secondary btn-sm me-2" id="prevImageBtn">
+                        <i class="fas fa-chevron-left"></i>
+                    </button>
+                    <button class="btn btn-outline-secondary btn-sm" id="nextImageBtn">
+                        <i class="fas fa-chevron-right"></i>
+                    </button>
+                </div>
             </div>
             <div class="card-body">
-                <div class="media-grid">
-                    <div class="media-item">
-                        <img src="https://via.placeholder.com/200x150/e3f2fd/1976d2?text=Vehicle+Damage" alt="Vehicle Damage">
-                        <div class="media-info">
-                            <h6>Vehicle Damage - Front</h6>
-                            <small class="text-muted">Extracted from attachment</small>
-                        </div>
-                    </div>
-                    
-                    <div class="media-item">
-                        <img src="https://via.placeholder.com/200x150/f3e5f5/7b1fa2?text=Police+Report" alt="Police Report">
-                        <div class="media-info">
-                            <h6>Police Report Scan</h6>
-                            <small class="text-muted">OCR processed</small>
-                        </div>
-                    </div>
-                    
-                    <div class="media-item">
-                        <img src="https://via.placeholder.com/200x150/e8f5e8/388e3c?text=Medical+Chart" alt="Medical Chart">
-                        <div class="media-info">
-                            <h6>Medical Assessment</h6>
-                            <small class="text-muted">Table extracted</small>
-                        </div>
-                    </div>
-                    
-                    <div class="media-item">
-                        <img src="https://via.placeholder.com/200x150/fff3e0/f57c00?text=Repair+Estimate" alt="Repair Estimate">
-                        <div class="media-info">
-                            <h6>Repair Cost Breakdown</h6>
-                            <small class="text-muted">Spreadsheet data</small>
-                        </div>
-                    </div>
+                <div id="imagesCarousel" 
+                    style="display: flex; gap: 15px; overflow-x: auto; scroll-behavior: smooth; white-space: nowrap;">
+                    <!-- JS will inject images here -->
                 </div>
             </div>
         </div>
+
 
         <!-- Analysis & Insights Section -->
         <div class="card" id="analysisSection" style="display: none;">
@@ -672,6 +659,34 @@
         });
     });
 
+    // Merge PDFs functionality
+    function mergePDFs(userId = "user123") {
+        const formData = new FormData();
+        formData.append("user_id", userId);
+
+        fetch("/merge_user_pdfs/", {
+            method: "POST",
+            body: formData
+        })
+        .then(res => res.json())
+        .then(data => {
+            const statusEl = document.getElementById("mergeStatus");
+            if (data.status === "success") {
+                statusEl.innerHTML = `✅ Merged PDF ready: 
+                    <a href="${data.file_url}" class="btn btn-success btn-sm" target="_blank">
+                        <i class="fas fa-download"></i> Download Merged PDF
+                    </a>`;
+            } else {
+                statusEl.innerHTML = "⚠️ " + data.message;
+            }
+        })
+        .catch(err => {
+            console.error("Merge error:", err);
+            document.getElementById("mergeStatus").innerText = "Merge failed.";
+        });
+    }
+
+
     // File upload functionality
     document.addEventListener('DOMContentLoaded', function () {
         const dropzone = document.getElementById('dropzone');
@@ -715,7 +730,7 @@
                 .then(res => res.json())
                 .then(data => {
                     if (data.status === "success") {
-                        // Update UI
+                        // Update UI for dropzone
                         dropzone.classList.add('file-uploaded');
                         dropzone.innerHTML = `
                             <i class="fas fa-check-circle fa-3x text-success mb-3"></i>
@@ -729,14 +744,20 @@
                         // Debug: check metadata
                         console.log("Metadata:", data.metadata);
 
-                        // Display extracted content
-                        if (data.metadata.subject) {
-                            document.getElementById('messageContent').innerHTML = `
-                                <strong>Subject:</strong> ${data.metadata.subject}<br>
-                                <strong>From:</strong> ${data.metadata.from}<br>
-                                <strong>Date:</strong> ${data.metadata.date}<br>
-                                <p>${data.metadata.body_text}</p>
-                            `;
+                        // ✅ Populate metadata placeholders instead of overwriting HTML
+                        if (data.metadata) {
+                            document.getElementById("metaFrom").textContent = data.metadata.from || "N/A";
+                            document.getElementById("metaTo").textContent = data.metadata.to || "N/A";
+                            document.getElementById("metaDate").textContent = data.metadata.date || "N/A";
+                            document.getElementById("metaSubject").textContent = data.metadata.subject || "N/A";
+
+                            // Format body with paragraphs
+                            document.getElementById("metaBody").innerHTML = data.metadata.body_text
+                                ? `<p>${data.metadata.body_text.replace(/\n/g, "</p><p>")}</p>`
+                                : "<p>No message body found.</p>";
+
+                            // Show the card
+                            document.getElementById("messageContent").style.display = "block";
                         }
 
                         // Show other sections
@@ -753,46 +774,6 @@
                 });
         }
 
-        // Donwload attachements Logic
-        function loadAttachments(userId = "user123") {
-            fetch(`/list_attachments/?user_id=${userId}`)
-                .then(res => res.json())
-                .then(data => {
-                    if (data.status === "success") {
-                        const listContainer = document.getElementById("attachmentsList");
-                        listContainer.innerHTML = ""; // clear old
-
-                        data.files.forEach(file => {
-                            let iconClass = "fas fa-file";
-                            if (file.ext === "pdf") iconClass = "fas fa-file-pdf text-danger";
-                            else if (file.ext === "docx") iconClass = "fas fa-file-word text-primary";
-                            else if (file.ext === "xlsx" || file.ext === "csv") iconClass = "fas fa-file-excel text-success";
-                            else if (["png", "jpg", "jpeg", "gif"].includes(file.ext)) iconClass = "fas fa-file-image text-warning";
-                            else if (file.ext === "zip") iconClass = "fas fa-file-archive text-secondary";
-
-                            const item = `
-                                <div class="attachment-item d-flex align-items-center mb-2">
-                                    <div class="file-icon me-3"><i class="${iconClass} fa-2x"></i></div>
-                                    <div class="flex-grow-1">
-                                        <h6 class="mb-1">${file.name}</h6>
-                                        <small class="text-muted">${file.size} • ${file.ext.toUpperCase()} Document</small>
-                                    </div>
-                                    <a href="${file.url}" class="btn btn-outline-primary btn-sm" download>
-                                        <i class="fas fa-download"></i> Download
-                                    </a>
-                                </div>
-                            `;
-                            listContainer.insertAdjacentHTML("beforeend", item);
-                        });
-
-                        // Show section only if files exist
-                        document.getElementById("attachmentsSection").style.display = "block";
-                    } else {
-                        console.log("No attachments:", data.message);
-                    }
-                })
-                .catch(err => console.error("Error loading attachments:", err));
-        }
 
 
         // Show all dashboard sections
@@ -884,6 +865,139 @@
             }
         });
     }
+    document.addEventListener("DOMContentLoaded", function() {
+        const btn = document.getElementById("showAttachmentsBtn");
+
+        btn.addEventListener("click", function() {
+            loadAttachments("user123"); // call with your logged-in user id
+        });
+
+        // Download attachments logic
+        function loadAttachments(userId = "user123") {
+            fetch(`/list_attachments/?user_id=${userId}`)
+                .then(res => res.json())
+                .then(data => {
+                    if (data.status === "success") {
+                        const listContainer = document.getElementById("attachmentsList");
+                        listContainer.innerHTML = ""; // clear old
+
+                        data.files.forEach(file => {
+                            let iconClass = "fas fa-file";
+                            if (file.ext === "pdf") iconClass = "fas fa-file-pdf text-danger";
+                            else if (file.ext === "docx") iconClass = "fas fa-file-word text-primary";
+                            else if (file.ext === "xlsx" || file.ext === "csv") iconClass = "fas fa-file-excel text-success";
+                            else if (["png", "jpg", "jpeg", "gif"].includes(file.ext)) iconClass = "fas fa-file-image text-warning";
+                            else if (file.ext === "zip") iconClass = "fas fa-file-archive text-secondary";
+
+                            const item = `
+                                <div class="attachment-item d-flex align-items-center mb-2">
+                                    <div class="file-icon me-3"><i class="${iconClass} fa-2x"></i></div>
+                                    <div class="flex-grow-1">
+                                        <h6 class="mb-1">${file.name}</h6>
+                                        <small class="text-muted">${file.size} • ${file.ext.toUpperCase()} Document</small>
+                                    </div>
+                                    <a href="${file.url}" class="btn btn-outline-primary btn-sm" download>
+                                        <i class="fas fa-download"></i> Download
+                                    </a>
+                                </div>
+                            `;
+                            listContainer.insertAdjacentHTML("beforeend", item);
+                        });
+
+                        // Show section only if files exist
+                        document.getElementById("attachmentsSection").style.display = "block";
+                    } else {
+                        alert("No attachments: " + data.message);
+                    }
+                })
+                .catch(err => console.error("Error loading attachments:", err));
+        }
+    });
+
+    // Extract media files functionality
+    document.getElementById("extractMediaBtn").addEventListener("click", function () {
+        const formData = new FormData();
+        formData.append("user_id", "user123"); // dynamic if needed
+
+        fetch("/extract_images/", {
+            method: "POST",
+            body: formData,
+        })
+            .then(res => res.json())
+            .then(data => {
+                if (data.status === "success") {
+                    alert(`✅ Extracted ${data.images.length} images successfully!`);
+
+                    const container = document.getElementById("attachmentsList");
+                    container.innerHTML = ""; // Clear old
+
+                    data.images.forEach(imgPath => {
+                        const item = `
+                            <div class="attachment-item d-flex align-items-center mb-2">
+                                <div class="file-icon me-3">
+                                    <i class="fas fa-image text-warning fa-2x"></i>
+                                </div>
+                                <div class="flex-grow-1">
+                                    <h6 class="mb-1">${imgPath.split("/").pop()}</h6>
+                                    <small class="text-muted">Extracted Image</small>
+                                </div>
+                                <a href="/${imgPath}" class="btn btn-outline-primary btn-sm" download>
+                                    <i class="fas fa-download"></i> Download
+                                </a>
+                            </div>
+                        `;
+                        container.insertAdjacentHTML("beforeend", item);
+                    });
+
+                    document.getElementById("attachmentsSection").style.display = "block";
+                } else {
+                    alert("⚠️ Failed: " + data.message);
+                }
+            })
+            .catch(err => {
+                console.error("Error:", err);
+                alert("Something went wrong while extracting media.");
+            });
+    });
+
+    // Image carousel functionality
+    function loadExtractedImages(userId = "user123") {
+        fetch(`/extract_images/?user_id=${userId}`)
+            .then(res => res.json())
+            .then(data => {
+                if (data.status === "success" && data.images.length > 0) {
+                    const carousel = document.getElementById("imagesCarousel");
+                    carousel.innerHTML = "";
+
+                    data.images.forEach(imgUrl => {
+                        const item = `
+                            <div style="flex: 0 0 auto;">
+                                <img src="${imgUrl}" 
+                                    alt="Extracted Image" 
+                                    style="max-height: 200px; border-radius: 8px; box-shadow: 0 2px 6px rgba(0,0,0,0.2);">
+                            </div>
+                        `;
+                        carousel.insertAdjacentHTML("beforeend", item);
+                    });
+
+                    document.getElementById("imagesSection").style.display = "block";
+                } else {
+                    console.log("No images found.");
+                }
+            })
+            .catch(err => console.error("Error loading images:", err));
+    }
+
+    // Carousel navigation
+    document.getElementById("prevImageBtn").addEventListener("click", () => {
+        document.getElementById("imagesCarousel").scrollBy({ left: -250, behavior: "smooth" });
+    });
+
+    document.getElementById("nextImageBtn").addEventListener("click", () => {
+        document.getElementById("imagesCarousel").scrollBy({ left: 250, behavior: "smooth" });
+    });
+
+
     </script>
 
 </body>
