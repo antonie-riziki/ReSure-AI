@@ -406,7 +406,7 @@ def extract_text_from_pdf(request, user_id="user123"):
         return JsonResponse({
             "status": "success",
             "message": "Text extracted and stored in memory.",
-            "preview": EXTRACTED_TEXT_STORE[user_id][:3000]  # only preview first 500 chars
+            "preview": EXTRACTED_TEXT_STORE[user_id]  # only preview first 500 chars
         })
 
     except Exception as e:
