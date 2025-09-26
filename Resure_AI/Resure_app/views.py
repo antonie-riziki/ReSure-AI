@@ -49,10 +49,13 @@ voice = africastalking.Voice
 
 otp_storage = {}
 
-pdf_path = os.path.join("Resure_AI", "users_data", "user123", "attachments", "merged.pdf")
 
+# pdf_path = os.path.join("Resure_AI", "users_data", "user123", "attachments", "merged.pdf")
+# if not os.path.exists(pdf_path):
+#     raise FileNotFoundError(f"File not found: {pdf_path}")
 
-qa_chain = get_qa_chain(pdf_path)
+# qa_chain = get_qa_chain(pdf_path)
+
 
 
 
@@ -198,19 +201,23 @@ def verify_otp_view(request):
     return redirect('registration')
 
 
-@csrf_exempt
-def chatbot_response(request):
-    if request.method == 'POST':
-        data = json.loads(request.body)
-        user_message = data.get('message', '')
-
-        if user_message:
-            bot_reply = get_gemini_response(user_message)
-            return JsonResponse({'response': bot_reply})
-        else:
-            return JsonResponse({'response': "Sorry, I didn't catch that."}, status=400)
 
 
+
+# qa_chain = None
+
+# def get_or_build_chain():
+#     global qa_chain
+#     if qa_chain is None:
+#         pdf_path = os.path.join("Resure_AI", "users_data", "user123", "attachments", "merged.pdf")
+#         if not os.path.exists(pdf_path):
+#             raise FileNotFoundError("merged.pdf not found yet")
+#         qa_chain = get_qa_chain(pdf_path)
+#     return qa_chain
+
+
+def get_pdf_path():
+    return os.path.join(settings.BASE_DIR, "users_data", "user123", "attachments", "merged.pdf")
 
 @csrf_exempt
 def rag_chatbot_response(request):
@@ -218,12 +225,22 @@ def rag_chatbot_response(request):
         data = json.loads(request.body)
         rag_user_message = data.get('message', '')
 
-        if rag_user_message:
-            bot_reply = query_system(rag_user_message, qa_chain)
-            return JsonResponse({'response': bot_reply})
-        else:
+        if not rag_user_message:
             return JsonResponse({'response': "Sorry, I didn't catch that."}, status=400)
 
+        pdf_path = get_pdf_path()
+        if not os.path.exists(pdf_path):
+            return JsonResponse({'response': f"File not found at: {pdf_path}"}, status=400)
+
+        try:
+            qa_chain = get_qa_chain(pdf_path)
+            if qa_chain is None:
+                return JsonResponse({'response': "System initialization failed. Check logs."}, status=500)
+
+            bot_reply = query_system(rag_user_message, qa_chain)
+            return JsonResponse({'response': bot_reply})
+        except Exception as e:
+            return JsonResponse({'response': f"System error: {str(e)}"}, status=500)
 
 
 
@@ -405,7 +422,7 @@ def extract_images_only(user_id: str, base_dir: str = "users_data", merged_file:
             pil_img.save(img_path)
 
             # Convert path to URL
-            img_url = f"/media/{user_id}/attachments/{img_name}"
+            img_url = f"users_data/{user_id}/attachments/{img_name}"
             results["images"].append(img_url)
 
     doc.close()

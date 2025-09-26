@@ -219,37 +219,32 @@ PROMPT_TEMPLATE = """
 
 
 def get_qa_chain(source_dir):
-  """Create QA chain with proper error handling"""
+    try:
+        docs = load_documents(source_dir)
+        if not docs:
+            raise ValueError("No documents found in the specified sources")
 
-  try:
-    docs = load_documents(source_dir)
-    if not docs:
-      raise ValueError("No documents found in the specified sources")
+        llm, embeddings = load_model()
+        retriever = create_vector_store(docs, embeddings)
 
-    llm, embeddings = load_model()
-    # if not llm or not embeddings:model_type: str = "gemini",
-    #   raise ValueError(f"Model {model_type} not configured properly")
+        prompt = PromptTemplate(
+            template=PROMPT_TEMPLATE,
+            input_variables=["context", "question"]
+        )
 
-    retriever = create_vector_store(docs, embeddings)
+        response = RetrievalQA.from_chain_type(
+            llm=llm,
+            chain_type="stuff",
+            retriever=retriever,
+            return_source_documents=True,
+            chain_type_kwargs={"prompt": prompt}
+        )
+        return response
 
-    prompt = PromptTemplate(
-        template=PROMPT_TEMPLATE,
-        input_variables=["context", "question"]
-    )
+    except Exception as e:
+        print(f"Error initializing QA system: {e}")
+        return None
 
-    response = RetrievalQA.from_chain_type(
-        llm=llm,
-        chain_type="stuff",
-        retriever=retriever,
-        return_source_documents=True,
-        chain_type_kwargs={"prompt": prompt}
-    )
-
-    return response
-
-  except Exception as e:
-    # print(f"Error initializing QA system: {e}")
-    return f"Error initializing QA system: {e}"
 
 
 

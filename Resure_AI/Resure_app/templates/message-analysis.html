@@ -974,22 +974,61 @@
 
    
 
-    // Display images button logic
-    function displayExtractedImages(images) {
-        const carousel = document.getElementById("imagesCarousel");
-        carousel.innerHTML = ""; // Clear old content
+// Function to inject images into carousel
+function displayExtractedImages(images) {
+    const carousel = document.getElementById("imagesCarousel");
+    carousel.innerHTML = ""; // Clear old content
 
-        images.forEach(imgUrl => {
-            const imgElem = document.createElement("img");
-            imgElem.src = imgUrl;
-            imgElem.style.height = "200px"; // standard height
-            imgElem.style.objectFit = "contain";
-            imgElem.classList.add("me-3");
-            carousel.appendChild(imgElem);
-        });
+    images.forEach(imgUrl => {
+        const imgElem = document.createElement("img");
+        imgElem.src = imgUrl;
+        imgElem.style.height = "200px";  // standard height
+        imgElem.style.width = "auto";
+        imgElem.style.objectFit = "contain";
+        imgElem.classList.add("me-3");
+        carousel.appendChild(imgElem);
+    });
 
-        document.getElementById("imagesSection").style.display = "block";
-    }
+    document.getElementById("imagesSection").style.display = "block";
+}
+
+// Scroll helper
+function scrollCarousel(direction) {
+    const carousel = document.getElementById("imagesCarousel");
+    const scrollAmount = 250; // adjust for image width
+    carousel.scrollBy({
+        left: direction === "next" ? scrollAmount : -scrollAmount,
+        behavior: "smooth"
+    });
+}
+
+// Button click for fetching images
+document.getElementById("displayImagesBtn").addEventListener("click", () => {
+    const formData = new FormData();
+    formData.append("user_id", "user123"); // dynamic if needed
+
+    fetch("/extract_images/", {
+        method: "POST",
+        body: formData,
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.status === "success" && data.images && data.images.length > 0) {
+            displayExtractedImages(data.images);
+        } else {
+            alert("No extracted images found.");
+        }
+    })
+    .catch(err => {
+        console.error("Error fetching images:", err);
+        alert("Failed to load images.");
+    });
+});
+
+// Prev / Next buttons
+document.getElementById("prevImageBtn").addEventListener("click", () => scrollCarousel("prev"));
+document.getElementById("nextImageBtn").addEventListener("click", () => scrollCarousel("next"));
+
 
 
     </script>
