@@ -26,6 +26,10 @@ import os, io
 import fitz 
 from PIL import Image
 import numpy as np
+from reportlab.lib.pagesizes import A4
+from reportlab.lib.styles import getSampleStyleSheet, ParagraphStyle
+from reportlab.platypus import SimpleDocTemplate, Paragraph, Spacer
+from django.http import JsonResponse, FileResponse
 
 load_dotenv()
 
@@ -100,6 +104,160 @@ def get_gemini_response(prompt):
 
 
 
+
+
+def gemini_decision_agent(prompt):
+    model = genai.GenerativeModel("gemini-2.5-flash",
+
+        system_instruction=f"""
+
+        Role & Purpose
+
+        You are ReInsure Strategist AI, a decision-making, advisory, and policy strategy assistant for the reinsurance industry.
+        Your role is to act as a virtual underwriter, strategist, and advisor supporting reinsurers, insurers (cedants), and brokers in analyzing facultative reinsurance placements.
+
+        You must:
+
+        Interpret and reason strictly from verified reinsurance documentation and data (e.g., Facultative Working Sheet, Appendix 1/2, actuarial references, catastrophe models).
+
+        Provide clear, structured, and actionable recommendations.
+
+        Maintain accuracy, compliance, and professional underwriting standards.
+
+        Avoid speculation; if information is missing, state clearly what else is needed.
+
+        🧩 Responsibilities
+
+        Decision Making & Underwriting Support
+
+        Evaluate cedant submissions (insured, peril, TSI, retention, PML, CAT exposure, etc.).
+
+        Recommend acceptance/rejection of risks and propose percentage share to underwrite.
+
+        Suggest terms, conditions, exclusions, or warranties to improve portfolio quality.
+
+        Advisory & Strategy
+
+        Advise on pricing, market positioning, and negotiation dynamics with brokers.
+
+        Assess portfolio impact (diversification vs. concentration).
+
+        Provide guidance on climate change, ESG, and regulatory compliance.
+
+        Policy Structuring
+
+        Recommend reinsurance structure (facultative vs. treaty, layers, deductibles).
+
+        Evaluate whether to accept risks net of brokerage/taxes.
+
+        Suggest suitable deductibles, retentions, and limits.
+
+        Computation & Analysis
+
+        Apply reinsurance formulas:
+
+Premium Rate (% or ‰): 
+(Premium÷TSI)×100 or ×1000
+
+Premium (given rate & TSI): 
+TSI×(Rate/100)
+
+Loss Ratio: 
+(Paid + Outstanding − Recoveries)÷Earned Premium × 100
+
+Accepted Premium: Gross Premium × Accepted Share %
+
+Accepted Liability: TSI × Accepted Share %
+
+Always show formulas, calculations, and interpretations.
+
+        Risk Assessment
+
+        Evaluate catastrophe risk using reliable models (e.g., GEM, flood maps).
+
+        Assess climate & ESG exposures (low/medium/high).
+
+        Review technical risk survey reports (fire safety, construction quality, security).
+
+        Highlight positive and negative factors (e.g., good housekeeping vs. weak fire systems).
+
+        🗂 Required Information Fields
+
+        For every case, capture and analyze the following (from the Facultative Reinsurance Working Sheet
+
+        Insured, Cedant, Broker
+        Perils Covered
+        Geographical Limit & Situation of Risk/Voyage
+        Occupation & Main Activities of Insured
+        TSI and Breakdown
+        Excess/Deductible
+        Retention of Cedant (%)
+        PML %
+        CAT Exposure
+        Period of Insurance
+        Claims Experience (last 3 years)
+        Share Offered %
+        Risk Survey Report
+        Premium Rate & Premium (original currency + KES equivalent)
+        Climate Change & ESG Factors
+        Technical Assessment
+        Market Considerations
+        Portfolio Impact
+        Proposed Terms & Conditions
+        Final Recommended % Share
+        Remarks & Manager’s Comments
+
+        📊 Output Style
+
+        Your responses must be:
+
+        Structured and professional, like a reinsurance underwriting memo.
+
+        Include tables for numeric data (TSI, Premium, Loss Ratios, Retentions).
+
+        Provide reasoned recommendations, not just raw data.
+
+        Highlight uncertainties and advise what additional data is required.
+
+        Example Output Block:
+
+        📌 Technical Assessment:
+        - Insured: ABC Manufacturing Ltd
+        - Perils Covered: Fire, Explosion
+        - PML: 60% of TSI → KES 300,000,000
+        - Claims Experience (3 yrs): Loss Ratio = 35%
+
+        ✅ Positive Factors: Good fire systems, diversified portfolio
+        ⚠️ Negative Factors: High CAT exposure (earthquake zone)
+
+        💡 Recommendation:
+        - Accept 20% facultative share.
+        - Proposed Premium: KES 25,000,000
+        - Conditions: Earthquake deductible of 5%, warranty on sprinkler maintenance.
+
+        🛑 Boundaries
+
+        Never generate fictitious or speculative data.
+
+        Do not provide legal or financial investment advice outside reinsurance.
+
+        Always clarify if a response is based on provided documents vs. general knowledge.""")
+
+    response = model.generate_content(
+        prompt,
+        generation_config=genai.GenerationConfig(
+            max_output_tokens=1000,
+            temperature=1.5,
+        )
+
+    )
+
+    return response.text
+
+
+
+
+
 def generate_otp(length=6):
     characters = string.ascii_uppercase + string.digits
     return ''.join(secrets.choice(characters) for _ in range(length))
@@ -141,6 +299,8 @@ def welcome_message(first_name, phone_number):
 
     except Exception as e:
         print(f'Houston, we have a problem: {e}')
+
+
 
 
 
@@ -204,6 +364,55 @@ def verify_otp_view(request):
 
 
 
+
+
+
+
+
+
+def get_merged_pdf_path(user_id="user123"):
+    """Helper: Returns path to merged.pdf for a given user_id"""
+    return os.path.join(settings.BASE_DIR, "users_data", user_id, "attachments", "merged.pdf")
+
+
+# Global storage for later use (in memory, not a file)
+EXTRACTED_TEXT_STORE = {}
+
+
+@csrf_exempt
+def extract_text_from_pdf(request, user_id="user123"):
+    """
+    Extracts all text from merged.pdf in the user's attachments folder
+    and stores it in a global variable for later use.
+    """
+    try:
+        pdf_path = get_merged_pdf_path(user_id)
+        if not os.path.exists(pdf_path):
+            return JsonResponse({"status": "error", "message": f"Merged PDF not found at {pdf_path}"}, status=404)
+
+        # Open and extract text
+        doc = fitz.open(pdf_path)
+        all_text = []
+        for page_num in range(len(doc)):
+            page = doc[page_num]
+            text = page.get_text("text")
+            if text.strip():
+                all_text.append(f"\n--- Page {page_num+1} ---\n{text}")
+        doc.close()
+
+        # Save into global variable for later usage
+        EXTRACTED_TEXT_STORE[user_id] = "\n".join(all_text)
+
+        return JsonResponse({
+            "status": "success",
+            "message": "Text extracted and stored in memory.",
+            "preview": EXTRACTED_TEXT_STORE[user_id][:3000]  # only preview first 500 chars
+        })
+
+    except Exception as e:
+        return JsonResponse({"status": "error", "message": str(e)}, status=500)
+
+
 # qa_chain = None
 
 # def get_or_build_chain():
@@ -214,6 +423,8 @@ def verify_otp_view(request):
 #             raise FileNotFoundError("merged.pdf not found yet")
 #         qa_chain = get_qa_chain(pdf_path)
 #     return qa_chain
+qa_chain = EXTRACTED_TEXT_STORE.get("user123", "")
+
 
 
 def get_pdf_path():
@@ -632,6 +843,85 @@ def merge_user_pdfs(request):
 
 
 
+def generate_pdf_report(agent_output: str, user_id="user123", base_dir="users_data"):
+    """
+    Generate a structured PDF report from model's output string.
+    """
+    user_dir = os.path.join(base_dir, user_id)
+    os.makedirs(user_dir, exist_ok=True)
+
+    pdf_path = os.path.join(user_dir, "report.pdf")
+
+    doc = SimpleDocTemplate(pdf_path, pagesize=A4)
+    styles = getSampleStyleSheet()
+    story = []
+
+    # Title
+    title_style = styles['Heading1']
+    title_style.alignment = 1
+    story.append(Paragraph("📑 Reinsurance AI Report", title_style))
+    story.append(Spacer(1, 20))
+
+    # Subtitle
+    subtitle_style = styles['Heading2']
+    story.append(Paragraph("Generated by ReInsure Strategist AI", subtitle_style))
+    story.append(Spacer(1, 20))
+
+    # Body
+    body_style = ParagraphStyle(
+        "Body",
+        parent=styles['Normal'],
+        fontSize=11,
+        leading=16,
+        spaceAfter=12
+    )
+
+    for para in agent_output.split("\n"):
+        if para.strip():
+            story.append(Paragraph(para.strip(), body_style))
+
+    doc.build(story)
+    return pdf_path
+
+
+@csrf_exempt
+def generate_report_view(request):
+    """
+    API endpoint to trigger PDF generation.
+    """
+    if request.method == "POST":
+        user_id = request.POST.get("user_id", "user123")
+
+        try:
+            # 1. Extract text from PDF
+            extracted_text = extract_text_from_pdf(user_id)
+
+            # 2. Call the decision agent with extracted text
+            agent_output = gemini_decision_agent(extracted_text)
+
+            if not agent_output:
+                return JsonResponse({"status": "error", "message": "No output from model"}, status=500)
+
+            # 3. Generate PDF
+            pdf_path = generate_pdf_report(agent_output, user_id=user_id)
+
+            return JsonResponse({
+                "status": "success",
+                "pdf_url": f"/users_data/{user_id}/generated_report.pdf"
+            })
+        except Exception as e:
+            return JsonResponse({"status": "error", "message": str(e)}, status=500)
+
+    return JsonResponse({"status": "error", "message": "Invalid request"}, status=400)
+
+
+
+
+
+
+
+
+
 @csrf_exempt
 def convert_attachments_to_pdf(request):
     if request.method == "POST":
@@ -719,6 +1009,9 @@ def extract_images_view(request):
             return JsonResponse({"status": "error", "message": str(e)})
 
     return JsonResponse({"status": "error", "message": "Invalid request"})
+
+
+
 
 
 

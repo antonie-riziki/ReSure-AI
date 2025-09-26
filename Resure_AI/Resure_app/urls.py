@@ -34,6 +34,8 @@ urlpatterns = [
     path("download_attachment/", views.download_attachment, name="download_attachment"),
     path("merge_user_pdfs/", views.merge_user_pdfs, name="merge_user_pdfs"),
     path("extract_images/", views.extract_images_view, name="extract_images"),
+    path("generate_report/", views.generate_report_view, name="generate_report"),
+
 
 
 ]  

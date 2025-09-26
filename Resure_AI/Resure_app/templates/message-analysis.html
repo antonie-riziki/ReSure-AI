@@ -590,6 +590,13 @@
             </div>
         </div>
 
+        <div style="padding-top: 15px; padding-bottom: 20px;">
+            <button id="generateReportBtn" class="btn btn-primary">
+                <i class="fas fa-file-pdf"></i> Generate Report
+            </button>
+        </div>
+
+
         <!-- Geographical Map Section -->
         <div class="card" id="mapSection" style="display: none;">
             <div class="card-header">
@@ -1029,6 +1036,28 @@ document.getElementById("displayImagesBtn").addEventListener("click", () => {
 document.getElementById("prevImageBtn").addEventListener("click", () => scrollCarousel("prev"));
 document.getElementById("nextImageBtn").addEventListener("click", () => scrollCarousel("next"));
 
+document.getElementById("generateReportBtn").addEventListener("click", () => {
+    const formData = new FormData();
+    formData.append("user_id", "user123"); // Replace with dynamic user ID
+
+    fetch("/generate_report/", {
+        method: "POST",
+        body: formData
+    })
+    .then(res => res.json())
+    .then(data => {
+        if (data.status === "success") {
+            // Open PDF in new tab or trigger download
+            window.open(data.pdf_url, "_blank");
+        } else {
+            alert("Failed to generate report: " + data.message);
+        }
+    })
+    .catch(err => {
+        console.error("Error generating report:", err);
+        alert("Something went wrong while generating the report.");
+    });
+});
 
 
     </script>
